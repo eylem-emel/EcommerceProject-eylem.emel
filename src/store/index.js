@@ -1,10 +1,9 @@
 import { configureStore } from "@reduxjs/toolkit";
-import thunk from "redux-thunk";
 
 export const store = configureStore({
   reducer: {
-    // Slice'ları buraya ekleyeceğiz (auth, products, cart, users)
+    // buraya slice'lar gelecek (auth, products, cart vs.)
   },
-  middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware().concat(thunk),
+  // Redux Toolkit'in getDefaultMiddleware'i zaten thunk içeriyor,
+  // ekstra eklememize gerek yok.
 });
