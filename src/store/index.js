@@ -1,9 +1,8 @@
-import { configureStore } from "@reduxjs/toolkit";
+import { createStore, applyMiddleware } from "redux";
+import { thunk } from "redux-thunk";
+import { createLogger } from "redux-logger";
+import rootReducer from "./rootReducer";
 
-const dummyReducer = (state = {}) => state;
+const logger = createLogger({ collapsed: true, duration: true });
 
-export const store = configureStore({
-  reducer: {
-    app: dummyReducer,
-  },
-});
+export const store = createStore(rootReducer, applyMiddleware(thunk, logger));

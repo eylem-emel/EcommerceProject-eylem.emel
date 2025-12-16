@@ -1,7 +1,12 @@
 import HeroSlider from "../components/HeroSlider";
 import ProductCard from "../components/ProductCard";
+import { useDispatch, useSelector } from "react-redux";
+import { setTheme } from "../store/client.actions";
 
 export default function HomePage() {
+  const dispatch = useDispatch();
+  const theme = useSelector((state) => state.client.theme);
+
   const products = Array.from({ length: 8 }).map((_, i) => ({
     id: i + 1,
     title: `Product ${i + 1}`,
@@ -10,8 +15,24 @@ export default function HomePage() {
 
   return (
     <div className="w-full flex flex-col gap-8 py-6">
+      {/* 🔹 Redux mini test */}
+      <div className="flex items-center gap-3">
+        <span className="text-sm">
+          Redux theme: <b>{theme}</b>
+        </span>
+
+        <button
+          className="rounded-md border px-3 py-1 text-sm"
+          onClick={() => dispatch(setTheme(theme === "light" ? "dark" : "light"))}
+        >
+          Toggle theme
+        </button>
+      </div>
+
+      {/* 🔹 Hero */}
       <HeroSlider />
 
+      {/* 🔹 Featured products */}
       <section className="w-full flex flex-col gap-4">
         <div className="flex items-end justify-between gap-4">
           <div className="flex flex-col">
