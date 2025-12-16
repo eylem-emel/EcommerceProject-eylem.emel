@@ -4,17 +4,15 @@ import { ArrowLeft } from "lucide-react";
 export default function ProductDetailPage() {
   const { id } = useParams();
 
-  // Şimdilik fake data (sonra store/api bağlarız)
   const product = {
     id,
     title: `Product ${id}`,
     price: `${(19.99 + Number(id)).toFixed(2)} $`,
-    desc: "Comfortable, durable, and stylish. This is placeholder text for product description.",
+    desc: "Comfortable, durable, and stylish. Placeholder description for product detail page.",
   };
 
   return (
     <div className="w-full flex flex-col gap-6 py-6">
-      {/* Back */}
       <div className="w-full flex">
         <Link
           to="/shop"
@@ -25,16 +23,13 @@ export default function ProductDetailPage() {
         </Link>
       </div>
 
-      {/* Content wrapper (flex-only responsive layout) */}
       <div className="w-full flex flex-col lg:flex-row gap-6">
-        {/* Image */}
         <div className="w-full lg:w-[52%] flex">
           <div className="w-full rounded-2xl border border-zinc-200 overflow-hidden flex">
             <div className="w-full aspect-[4/3] lg:aspect-[4/4] bg-zinc-100" />
           </div>
         </div>
 
-        {/* Info */}
         <div className="w-full lg:w-[48%] flex">
           <div className="w-full flex flex-col gap-4">
             <div className="flex flex-col gap-2">
@@ -45,7 +40,6 @@ export default function ProductDetailPage() {
               <p className="text-sm text-zinc-600">{product.desc}</p>
             </div>
 
-            {/* Options (placeholder) */}
             <div className="w-full flex flex-col gap-3">
               <div className="flex flex-col gap-2">
                 <span className="text-sm text-zinc-600">Size</span>
@@ -77,7 +71,6 @@ export default function ProductDetailPage() {
               </div>
             </div>
 
-            {/* Actions */}
             <div className="w-full flex flex-col sm:flex-row gap-3">
               <button className="w-full sm:w-auto px-5 py-3 rounded-xl bg-zinc-900 text-white text-sm">
                 Add to cart
@@ -87,7 +80,6 @@ export default function ProductDetailPage() {
               </button>
             </div>
 
-            {/* Details list */}
             <div className="w-full flex flex-col gap-2 pt-2">
               {[
                 ["Material", "Cotton blend"],
