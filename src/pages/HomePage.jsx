@@ -1,19 +1,40 @@
-import { ShoppingCart } from "lucide-react";
+import HeroSlider from "../components/HeroSlider";
+import ProductCard from "../components/ProductCard";
 
-function HomePage() {
+export default function HomePage() {
+  const products = Array.from({ length: 8 }).map((_, i) => ({
+    id: i + 1,
+    title: `Product ${i + 1}`,
+    price: `${(19.99 + i).toFixed(2)} $`,
+  }));
+
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-slate-100">
-      <div className="flex items-center gap-3">
-        <ShoppingCart size={48} />
-        <h1 className="text-3xl font-bold text-slate-800">
-          EcommerceProject - eylem.emel
-        </h1>
-      </div>
-      <p className="text-slate-600 mt-2">
-        Redux + Router + Tailwind + Toastify iskeleti hazır 🎉
-      </p>
+    <div className="w-full flex flex-col gap-8 py-6">
+      <HeroSlider />
+
+      <section className="w-full flex flex-col gap-4">
+        <div className="flex items-end justify-between gap-4">
+          <div className="flex flex-col">
+            <h2 className="text-lg font-semibold">Featured Products</h2>
+            <p className="text-sm text-zinc-600">Handpicked for you</p>
+          </div>
+
+          <button className="text-sm px-3 py-2 rounded-xl border border-zinc-200">
+            View all
+          </button>
+        </div>
+
+        <div className="w-full flex flex-wrap gap-4">
+          {products.map((p) => (
+            <div
+              key={p.id}
+              className="w-full sm:w-[calc(50%-0.5rem)] lg:w-[calc(25%-0.75rem)] flex"
+            >
+              <ProductCard title={p.title} price={p.price} />
+            </div>
+          ))}
+        </div>
+      </section>
     </div>
   );
 }
-
-export default HomePage;
