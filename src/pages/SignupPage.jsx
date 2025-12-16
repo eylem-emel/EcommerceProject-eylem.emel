@@ -11,6 +11,8 @@ export default function SignupPage() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
+  console.log("✅ SignupPage mounted");
+
   // ✅ Roles artık Redux store'dan geliyor
   const roles = useSelector((state) => state.client.roles);
 
@@ -51,6 +53,7 @@ export default function SignupPage() {
 
   // ✅ Need-based thunk: roles gerekiyorsa çağrılır, doluysa tekrar fetch etmez
   useEffect(() => {
+    console.log("✅ dispatch fetchRolesIfNeeded()");
     dispatch(fetchRolesIfNeeded());
   }, [dispatch]);
 
@@ -214,6 +217,15 @@ export default function SignupPage() {
             />
           </Field>
         </div>
+
+        {/* 🔧 DEBUG: roles thunk tetikleme (testten sonra silebilirsin) */}
+        <button
+          type="button"
+          className="rounded-md border px-3 py-1 text-sm self-start"
+          onClick={() => dispatch(fetchRolesIfNeeded())}
+        >
+          Fetch roles (debug)
+        </button>
 
         <Field label="Role" error={errors.role_id?.message}>
           <Controller
