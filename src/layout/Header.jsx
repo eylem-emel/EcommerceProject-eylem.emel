@@ -1,7 +1,17 @@
-import { Link, NavLink } from "react-router-dom";
+import { NavLink, Link } from "react-router-dom";
 import { Search, ShoppingCart, User } from "lucide-react";
 
 export default function Header() {
+  const menu = [
+    { label: "Home", to: "/" },
+    { label: "Shop", to: "/shop" },
+    { label: "Men", to: "/shop" },
+    { label: "Women", to: "/shop" },
+    { label: "Kids", to: "/shop" },
+    { label: "Accessories", to: "/shop" },
+    { label: "Sale", to: "/shop" },
+  ];
+
   return (
     <header className="w-full border-b border-zinc-200">
       <div className="w-full max-w-7xl mx-auto px-4 py-4 flex flex-col gap-3">
@@ -32,13 +42,18 @@ export default function Header() {
         </div>
 
         <nav className="flex items-center gap-2 overflow-x-auto">
-          {["Shop", "Men", "Women", "Kids", "Accessories", "Sale"].map((item) => (
+          {menu.map((item) => (
             <NavLink
-              key={item}
-              to="/"
-              className="text-sm whitespace-nowrap px-3 py-2 rounded-xl border border-transparent hover:border-zinc-200"
+              key={item.label}
+              to={item.to}
+              className={({ isActive }) =>
+                [
+                  "text-sm whitespace-nowrap px-3 py-2 rounded-xl border",
+                  isActive ? "border-zinc-300" : "border-transparent hover:border-zinc-200",
+                ].join(" ")
+              }
             >
-              {item}
+              {item.label}
             </NavLink>
           ))}
         </nav>
