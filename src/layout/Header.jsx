@@ -11,6 +11,8 @@ export default function Header() {
     { label: "Accessories", to: "/shop" },
     { label: "Sale", to: "/shop" },
     { label: "Contact", to: "/contact" },
+    { label: "Team", to: "/team" },
+    { label: "About", to: "/about" },
   ];
 
   return (
