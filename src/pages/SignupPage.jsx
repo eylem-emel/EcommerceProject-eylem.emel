@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { api } from "../api/axios";
@@ -14,6 +14,7 @@ export default function SignupPage() {
 
   const {
     register,
+    control,
     handleSubmit,
     watch,
     resetField,
@@ -38,19 +39,7 @@ export default function SignupPage() {
   const roleId = watch("role_id");
   const password = watch("password");
 
-  const customerRoleId = useMemo(() => {
-    const customer = roles.find((r) =>
-      String(r.name || r.role || r.code || "").toLowerCase().includes("customer")
-    );
-    return customer?.id != null ? String(customer.id) : "";
-  }, [roles]);
-
-  const isStoreRole = useMemo(() => {
-    const selected = roles.find((r) => String(r.id) === String(roleId));
-    const roleName = selected?.name || selected?.role || selected?.code || "";
-    return String(roleName).toLowerCase() === "store";
-  }, [roles, roleId]);
-
+  // Roles fetch
   useEffect(() => {
     let alive = true;
 
@@ -62,16 +51,12 @@ export default function SignupPage() {
         const res = await api.get("/roles");
         if (!alive) return;
 
-        console.log("ROLES RESPONSE:", res.data);
-
         const list =
           (Array.isArray(res.data) && res.data) ||
           (Array.isArray(res.data?.data) && res.data.data) ||
           (Array.isArray(res.data?.roles) && res.data.roles) ||
           (Array.isArray(res.data?.data?.roles) && res.data.data.roles) ||
           [];
-
-        console.log("ROLES LIST:", list);
 
         setRoles(list);
       } catch (err) {
@@ -88,18 +73,42 @@ export default function SignupPage() {
     }
 
     fetchRoles();
-
     return () => {
       alive = false;
     };
   }, []);
 
-  // Customer default role -> kesin seçilsin (validate da et)
+  // Default role: customer varsa onu, yoksa ilk rol
   useEffect(() => {
-    if (!loadingRoles && roles.length && !roleId && customerRoleId) {
-      setValue("role_id", customerRoleId, { shouldValidate: true });
+    if (loadingRoles) return;
+    if (!roles.length) return;
+    if (roleId) return;
+
+    const customer =
+      roles.find((r) =>
+        String(r.name || r.role || r.code || "")
+          .toLowerCase()
+          .includes("customer")
+      ) ||
+      roles.find((r) =>
+        String(r.name || r.role || r.code || "")
+          .toLowerCase()
+          .includes("müşteri")
+      ) ||
+      null;
+
+    const defaultId = customer?.id ?? roles[0]?.id;
+    if (defaultId != null) {
+      setValue("role_id", String(defaultId), { shouldValidate: true });
     }
-  }, [loadingRoles, roles, roleId, customerRoleId, setValue]);
+  }, [loadingRoles, roles, roleId, setValue]);
+
+  const selectedRoleName = useMemo(() => {
+    const selected = roles.find((r) => String(r.id) === String(roleId));
+    return String(selected?.name || selected?.role || selected?.code || "").toLowerCase();
+  }, [roles, roleId]);
+
+  const isStoreRole = selectedRoleName === "store";
 
   // Store değilse store alanlarını temizle
   useEffect(() => {
@@ -111,6 +120,7 @@ export default function SignupPage() {
     }
   }, [isStoreRole, resetField]);
 
+  // Validations
   const passwordRegex =
     /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
 
@@ -142,7 +152,13 @@ export default function SignupPage() {
       await api.post("/signup", payload);
 
       toast.warn("You need to click link in email to activate your account!");
-      navigate(-1);
+
+      // önceki sayfa bizim sitemizse geri dön, değilse home'a
+      const ref = document.referrer;
+      const sameSite = ref && ref.startsWith(window.location.origin);
+
+      if (sameSite) navigate(-1);
+      else navigate("/");
     } catch (err) {
       const msg =
         err?.response?.data?.message ||
@@ -158,15 +174,11 @@ export default function SignupPage() {
     <div className="w-full flex flex-col gap-6 py-6">
       <div className="w-full flex flex-col gap-2">
         <h1 className="text-xl sm:text-2xl font-semibold">Sign Up</h1>
-        <p className="text-sm text-zinc-600">
-          Create your account to start shopping.
-        </p>
+        <p className="text-sm text-zinc-600">Create your account to start shopping.</p>
 
-        {/* Debug (istersen sonra silebilirsin) */}
         {rolesError ? (
           <div className="text-sm text-red-600">Roles error: {rolesError}</div>
         ) : null}
-        <div className="text-xs text-zinc-500">Roles loaded: {roles.length}</div>
       </div>
 
       <form
@@ -192,10 +204,7 @@ export default function SignupPage() {
               placeholder="you@email.com"
               {...register("email", {
                 required: "Email is required",
-                pattern: {
-                  value: /^\S+@\S+\.\S+$/,
-                  message: "Invalid email",
-                },
+                pattern: { value: /^\S+@\S+\.\S+$/, message: "Invalid email" },
               })}
             />
           </Field>
@@ -217,10 +226,7 @@ export default function SignupPage() {
             />
           </Field>
 
-          <Field
-            label="Confirm Password"
-            error={errors.passwordConfirm?.message}
-          >
+          <Field label="Confirm Password" error={errors.passwordConfirm?.message}>
             <input
               type="password"
               className="w-full px-3 py-2 rounded-xl border border-zinc-200 outline-none"
@@ -234,24 +240,29 @@ export default function SignupPage() {
         </div>
 
         <Field label="Role" error={errors.role_id?.message}>
-          <select
-            className="w-full px-3 py-2 rounded-xl border border-zinc-200 outline-none bg-white"
-            disabled={loadingRoles}
-            {...register("role_id", { required: "Role is required" })}
-            onChange={(e) =>
-              setValue("role_id", e.target.value, { shouldValidate: true })
-            }
-          >
-            <option value="" disabled>
-              {loadingRoles ? "Loading roles..." : "Select role"}
-            </option>
+          <Controller
+            name="role_id"
+            control={control}
+            rules={{ required: "Role is required" }}
+            render={({ field }) => (
+              <select
+                className="w-full px-3 py-2 rounded-xl border border-zinc-200 outline-none bg-white"
+                disabled={loadingRoles}
+                value={field.value || ""}
+                onChange={(e) => field.onChange(e.target.value)}
+              >
+                <option value="" disabled>
+                  {loadingRoles ? "Loading roles..." : "Select role"}
+                </option>
 
-            {roles.map((r) => (
-              <option key={r.id} value={String(r.id)}>
-                {r.name || r.role || r.code || `Role ${r.id}`}
-              </option>
-            ))}
-          </select>
+                {roles.map((r) => (
+                  <option key={r.id} value={String(r.id)}>
+                    {r.name || r.role || r.code || `Role ${r.id}`}
+                  </option>
+                ))}
+              </select>
+            )}
+          />
         </Field>
 
         {isStoreRole && (
@@ -290,10 +301,7 @@ export default function SignupPage() {
                   placeholder="TXXXXVXXXXXX"
                   {...register("store_tax_no", {
                     required: "Tax ID is required",
-                    pattern: {
-                      value: taxNoRegex,
-                      message: "Format: TXXXXVXXXXXX",
-                    },
+                    pattern: { value: taxNoRegex, message: "Format: TXXXXVXXXXXX" },
                   })}
                 />
               </Field>
@@ -352,8 +360,8 @@ function Field({ label, error, children }) {
 function normalizeTRPhone(v) {
   const s = String(v || "").replace(/\s+/g, "");
   if (s.startsWith("+90")) return s;
-  if (s.startsWith("0")) return "+9" + s; // 0XXXXXXXXXX => +90XXXXXXXXXX
-  if (/^5\d{9}$/.test(s)) return "+90" + s; // 5XXXXXXXXX => +905XXXXXXXXX
+  if (s.startsWith("0")) return "+9" + s;
+  if (/^5\d{9}$/.test(s)) return "+90" + s;
   return s;
 }
 
