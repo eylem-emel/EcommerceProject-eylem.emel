@@ -10,6 +10,7 @@ export default function Header() {
     { label: "Kids", to: "/shop" },
     { label: "Accessories", to: "/shop" },
     { label: "Sale", to: "/shop" },
+    { label: "Contact", to: "/contact" },
   ];
 
   return (
