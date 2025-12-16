@@ -43,7 +43,7 @@ export default function ShopPage() {
             key={p.id}
             className="w-full sm:w-[calc(50%-0.5rem)] lg:w-[calc(25%-0.75rem)] flex"
           >
-            <ProductCard title={p.title} price={p.price} />
+            <ProductCard id={p.id} title={p.title} price={p.price} />
           </div>
         ))}
       </div>
