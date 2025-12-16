@@ -1,3 +1,4 @@
+import SignupPage from "./pages/SignupPage";
 import { Routes, Route } from "react-router-dom";
 import Header from "./layout/Header";
 import PageContent from "./layout/PageContent";
@@ -25,6 +26,7 @@ export default function App() {
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/team" element={<TeamPage />} />
           <Route path="/about" element={<AboutPage />} />
+          <Route path="/signup" element={<SignupPage />} />
         </Routes>
       </PageContent>
 
