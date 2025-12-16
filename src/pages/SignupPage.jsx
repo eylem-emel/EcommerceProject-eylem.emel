@@ -4,13 +4,23 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { api } from "../api/axios";
 
+import { useDispatch, useSelector } from "react-redux";
+import { fetchRolesIfNeeded } from "../store/roles.thunks";
+
 export default function SignupPage() {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
-  const [roles, setRoles] = useState([]);
-  const [loadingRoles, setLoadingRoles] = useState(true);
+  // ✅ Roles artık Redux store'dan geliyor
+  const roles = useSelector((state) => state.client.roles);
+
+  // T09 için yeterli "loading" mantığı: roles boşsa loading
+  const loadingRoles = !Array.isArray(roles) || roles.length === 0;
+
+  // Bu sayfada rolesError'ı Redux'ta tutmuyoruz (task istemiyor)
+  const rolesError = "";
+
   const [submitting, setSubmitting] = useState(false);
-  const [rolesError, setRolesError] = useState("");
 
   const {
     register,
@@ -39,44 +49,10 @@ export default function SignupPage() {
   const roleId = watch("role_id");
   const password = watch("password");
 
-  // Roles fetch
+  // ✅ Need-based thunk: roles gerekiyorsa çağrılır, doluysa tekrar fetch etmez
   useEffect(() => {
-    let alive = true;
-
-    async function fetchRoles() {
-      try {
-        setLoadingRoles(true);
-        setRolesError("");
-
-        const res = await api.get("/roles");
-        if (!alive) return;
-
-        const list =
-          (Array.isArray(res.data) && res.data) ||
-          (Array.isArray(res.data?.data) && res.data.data) ||
-          (Array.isArray(res.data?.roles) && res.data.roles) ||
-          (Array.isArray(res.data?.data?.roles) && res.data.data.roles) ||
-          [];
-
-        setRoles(list);
-      } catch (err) {
-        const msg =
-          err?.response?.data?.message ||
-          err?.response?.data?.error ||
-          err?.message ||
-          "Roles alınamadı.";
-        setRolesError(msg);
-        toast.error("Roles alınamadı. Lütfen tekrar deneyin.");
-      } finally {
-        if (alive) setLoadingRoles(false);
-      }
-    }
-
-    fetchRoles();
-    return () => {
-      alive = false;
-    };
-  }, []);
+    dispatch(fetchRolesIfNeeded());
+  }, [dispatch]);
 
   // Default role: customer varsa onu, yoksa ilk rol
   useEffect(() => {

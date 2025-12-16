@@ -1,32 +1,25 @@
 import { setRoles } from "./client.actions";
+import { api } from "../api/axios";
 
-/**
- * Need-based thunk:
- * - roles store'da doluysa tekrar fetch etmez
- * - sadece gerektiğinde çağırırsın (ör: signup, login, admin sayfası)
- */
 export const fetchRolesIfNeeded = () => async (dispatch, getState) => {
   const { roles } = getState().client;
 
-  if (Array.isArray(roles) && roles.length > 0) {
-    return; // already have roles
-  }
+  // only if needed
+  if (Array.isArray(roles) && roles.length > 0) return;
 
   try {
-    // Şimdilik endpoint'i varsayımsal yazıyorum.
-    // Backend'inizde roles endpoint'i neyse burayı güncellersin.
-    const res = await fetch("/roles");
+    const res = await api.get("/roles");
 
-    if (!res.ok) throw new Error(`Failed to fetch roles: ${res.status}`);
+    const list =
+      (Array.isArray(res.data) && res.data) ||
+      (Array.isArray(res.data?.data) && res.data.data) ||
+      (Array.isArray(res.data?.roles) && res.data.roles) ||
+      (Array.isArray(res.data?.data?.roles) && res.data.data.roles) ||
+      [];
 
-    const data = await res.json();
-
-    // API bazen { roles: [...] } bazen direkt [...] döndürebilir diye güvenli okuyoruz
-    const rolesList = Array.isArray(data) ? data : data?.roles;
-
-    dispatch(setRoles(Array.isArray(rolesList) ? rolesList : []));
+    dispatch(setRoles(list));
   } catch (err) {
     console.error("fetchRolesIfNeeded error:", err);
-    // İstersen burada başka action ile hata state'i de tutabiliriz ama task bunu istemiyor.
+    // task istemediği için store'a error basmıyoruz
   }
 };
