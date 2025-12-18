@@ -1,4 +1,3 @@
-// src/store/client.types.js
 export const SET_USER = "client/SET_USER";
 export const CLEAR_USER = "client/CLEAR_USER";
 

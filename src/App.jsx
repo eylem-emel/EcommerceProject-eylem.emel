@@ -13,9 +13,15 @@ import AboutPage from "./pages/AboutPage";
 import SignupPage from "./pages/SignupPage";
 import LoginPage from "./pages/LoginPage";
 
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
 export default function App() {
   return (
     <div className="min-h-screen flex flex-col">
+      {/* Toaster burada durursa tüm sayfalarda görünür */}
+      <ToastContainer position="top-right" autoClose={2500} hideProgressBar />
+
       <Header />
 
       <PageContent>

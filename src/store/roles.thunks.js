@@ -4,7 +4,6 @@ import { setRoles } from "./client.actions";
 export const fetchRolesIfNeeded = () => async (dispatch, getState) => {
   const roles = getState().client.roles;
 
-  // SADECE ihtiyaç halinde
   if (Array.isArray(roles) && roles.length > 0) return;
 
   try {
