@@ -1,4 +1,4 @@
-import { SET_CART, SET_PAYMENT, SET_ADDRESS } from "./shoppingCart.types";
+import { SET_ADDRESS, SET_CART, SET_PAYMENT } from "./shoppingCart.types";
 
 export const setCart = (cart) => ({ type: SET_CART, payload: cart });
 export const setPayment = (payment) => ({ type: SET_PAYMENT, payload: payment });

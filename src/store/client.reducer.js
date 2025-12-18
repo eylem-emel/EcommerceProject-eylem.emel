@@ -1,4 +1,4 @@
-import { SET_USER, SET_ROLES, SET_THEME, SET_LANGUAGE } from "./client.types";
+import { SET_LANGUAGE, SET_ROLES, SET_THEME, SET_USER } from "./client.types";
 
 const initialState = {
   user: {},
@@ -12,13 +12,17 @@ const initialState = {
 export default function clientReducer(state = initialState, action) {
   switch (action.type) {
     case SET_USER:
-      return { ...state, user: action.payload ?? {} };
+      return { ...state, user: action.payload };
+
     case SET_ROLES:
-      return { ...state, roles: Array.isArray(action.payload) ? action.payload : [] };
+      return { ...state, roles: action.payload };
+
     case SET_THEME:
-      return { ...state, theme: action.payload ?? state.theme };
+      return { ...state, theme: action.payload };
+
     case SET_LANGUAGE:
-      return { ...state, language: action.payload ?? state.language };
+      return { ...state, language: action.payload };
+
     default:
       return state;
   }
