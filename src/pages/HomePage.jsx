@@ -43,9 +43,7 @@ export default function HomePage() {
         <div className="flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between">
           <div className="flex flex-col gap-1">
             <div className="text-sm font-semibold">Need help?</div>
-            <div className="text-sm text-zinc-600">
-              Reach out from the contact page.
-            </div>
+            <div className="text-sm text-zinc-600">Reach out from the contact page.</div>
           </div>
 
           <Link

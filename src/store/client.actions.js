@@ -1,9 +1,10 @@
+// src/store/client.actions.js
 import {
-  SET_LANGUAGE,
-  SET_ROLES,
-  SET_THEME,
   SET_USER,
   CLEAR_USER,
+  SET_ROLES,
+  SET_THEME,
+  SET_LANGUAGE,
 } from "./client.types";
 
 export const setUser = (user) => ({ type: SET_USER, payload: user });

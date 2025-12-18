@@ -1,32 +1,33 @@
+// src/store/auth.thunks.js
 import { api } from "../api/axios";
 import { setUser } from "./client.actions";
 
-export const loginThunk = (form, remember) => async (dispatch) => {
-  try {
-    const res = await api.post("/login", {
-      email: form.email,
-      password: form.password,
-    });
+export const loginThunk = ({ email, password, remember }) => {
+  return async (dispatch) => {
+    const res = await api.post("/login", { email, password });
+    const data = res?.data || {};
 
-    const token = res.data?.token;
-    const user = res.data?.user ?? res.data;
+    // API bazen token/user'ı farklı isimlerle döndürebiliyor:
+    const token =
+      data.token || data.access_token || data.accessToken || data.jwt || null;
 
-    if (remember && token) {
-      localStorage.setItem(
-        "token",
-        token.startsWith("Bearer ") ? token : `Bearer ${token}`
-      );
-    } else {
-      localStorage.removeItem("token");
-    }
+    const userFromApi = data.user || data;
+
+    // User objesini garantiye alalım
+    const user = {
+      name: userFromApi?.name || "User",
+      email: userFromApi?.email || email,
+      role_id: userFromApi?.role_id ?? null,
+      ...userFromApi,
+    };
+
+    // remember -> localStorage token
+    if (remember && token) localStorage.setItem("token", token);
+    if (!remember) localStorage.removeItem("token");
 
     dispatch(setUser(user));
-    return { ok: true, user };
-  } catch (err) {
-    const msg =
-      err?.response?.data?.message ||
-      err?.response?.data?.error ||
-      "Login başarısız. Email/şifreyi kontrol et.";
-    return { ok: false, message: msg };
-  }
+
+    // LoginPage await ile bunu alacak
+    return { token, user, raw: data };
+  };
 };

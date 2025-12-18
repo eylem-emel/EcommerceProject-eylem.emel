@@ -1,7 +1,14 @@
-import { SET_USER, SET_ROLES, SET_THEME, SET_LANGUAGE, CLEAR_USER } from "./client.types";
+// src/store/client.reducer.js
+import {
+  SET_USER,
+  CLEAR_USER,
+  SET_ROLES,
+  SET_THEME,
+  SET_LANGUAGE,
+} from "./client.types";
 
 const initialState = {
-  user: null,
+  user: null,          // login olunca obje set edilecek
   addressList: [],
   creditCards: [],
   roles: [],
