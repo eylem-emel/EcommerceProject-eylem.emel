@@ -1,5 +1,5 @@
-import SignupPage from "./pages/SignupPage";
 import { Routes, Route } from "react-router-dom";
+
 import Header from "./layout/Header";
 import PageContent from "./layout/PageContent";
 import Footer from "./layout/Footer";
@@ -10,8 +10,8 @@ import ProductDetailPage from "./pages/ProductDetailPage";
 import ContactPage from "./pages/ContactPage";
 import TeamPage from "./pages/TeamPage";
 import AboutPage from "./pages/AboutPage";
-
-
+import SignupPage from "./pages/SignupPage";
+import LoginPage from "./pages/LoginPage";
 
 export default function App() {
   return (
@@ -26,7 +26,9 @@ export default function App() {
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/team" element={<TeamPage />} />
           <Route path="/about" element={<AboutPage />} />
+
           <Route path="/signup" element={<SignupPage />} />
+          <Route path="/login" element={<LoginPage />} />
         </Routes>
       </PageContent>
 

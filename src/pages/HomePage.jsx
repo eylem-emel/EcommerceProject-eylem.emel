@@ -1,61 +1,74 @@
-import HeroSlider from "../components/HeroSlider";
-import ProductCard from "../components/ProductCard";
-import { useDispatch, useSelector } from "react-redux";
-import { setTheme } from "../store/client.actions";
+// src/pages/HomePage.jsx
+import { Link } from "react-router-dom";
 
 export default function HomePage() {
-  const dispatch = useDispatch();
-  const theme = useSelector((state) => state.client.theme);
-
-  const products = Array.from({ length: 8 }).map((_, i) => ({
-    id: i + 1,
-    title: `Product ${i + 1}`,
-    price: `${(19.99 + i).toFixed(2)} $`,
-  }));
-
   return (
-    <div className="w-full flex flex-col gap-8 py-6">
-      {/* 🔹 Redux mini test */}
-      <div className="flex items-center gap-3">
-        <span className="text-sm">
-          Redux theme: <b>{theme}</b>
-        </span>
+    <div className="w-full flex flex-col gap-10">
+      {/* HERO */}
+      <section className="w-full rounded-2xl border border-zinc-200 p-6 sm:p-10 bg-white">
+        <div className="max-w-3xl flex flex-col gap-4">
+          <h1 className="text-2xl sm:text-4xl font-semibold leading-tight">
+            Discover products you’ll love.
+          </h1>
+          <p className="text-sm sm:text-base text-zinc-600">
+            Browse our latest collection. Simple, clean, and fast shopping experience.
+          </p>
 
-        <button
-          className="rounded-md border px-3 py-1 text-sm"
-          onClick={() => dispatch(setTheme(theme === "light" ? "dark" : "light"))}
-        >
-          Toggle theme
-        </button>
-      </div>
+          <div className="flex items-center gap-3 pt-2">
+            <Link
+              to="/shop"
+              className="px-5 py-3 rounded-xl bg-zinc-900 text-white text-sm hover:bg-zinc-800"
+            >
+              Go to Shop
+            </Link>
+            <Link
+              to="/signup"
+              className="px-5 py-3 rounded-xl border border-zinc-200 text-sm hover:bg-zinc-50"
+            >
+              Create account
+            </Link>
+          </div>
+        </div>
+      </section>
 
-      {/* 🔹 Hero */}
-      <HeroSlider />
+      {/* QUICK LINKS */}
+      <section className="w-full grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <Card title="New Arrivals" desc="Check what’s new this week." to="/shop" />
+        <Card title="Popular" desc="Most loved by customers." to="/shop" />
+        <Card title="Sale" desc="Best deals, limited time." to="/shop" />
+      </section>
 
-      {/* 🔹 Featured products */}
-      <section className="w-full flex flex-col gap-4">
-        <div className="flex items-end justify-between gap-4">
-          <div className="flex flex-col">
-            <h2 className="text-lg font-semibold">Featured Products</h2>
-            <p className="text-sm text-zinc-600">Handpicked for you</p>
+      {/* INFO */}
+      <section className="w-full rounded-2xl border border-zinc-200 p-6 bg-white">
+        <div className="flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-1">
+            <div className="text-sm font-semibold">Need help?</div>
+            <div className="text-sm text-zinc-600">
+              Reach out from the contact page.
+            </div>
           </div>
 
-          <button className="text-sm px-3 py-2 rounded-xl border border-zinc-200">
-            View all
-          </button>
-        </div>
-
-        <div className="w-full flex flex-wrap gap-4">
-          {products.map((p) => (
-            <div
-              key={p.id}
-              className="w-full sm:w-[calc(50%-0.5rem)] lg:w-[calc(25%-0.75rem)] flex"
-            >
-              <ProductCard id={p.id} title={p.title} price={p.price} />
-            </div>
-          ))}
+          <Link
+            to="/contact"
+            className="px-4 py-2 rounded-xl border border-zinc-200 text-sm hover:bg-zinc-50 self-start sm:self-auto"
+          >
+            Contact
+          </Link>
         </div>
       </section>
     </div>
+  );
+}
+
+function Card({ title, desc, to }) {
+  return (
+    <Link
+      to={to}
+      className="rounded-2xl border border-zinc-200 p-5 bg-white hover:bg-zinc-50 transition"
+    >
+      <div className="text-sm font-semibold">{title}</div>
+      <div className="text-sm text-zinc-600 mt-1">{desc}</div>
+      <div className="text-sm mt-4 underline">Explore</div>
+    </Link>
   );
 }

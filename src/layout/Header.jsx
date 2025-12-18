@@ -1,7 +1,15 @@
-import { NavLink, Link } from "react-router-dom";
+import { NavLink, Link, useNavigate } from "react-router-dom";
 import { Search, ShoppingCart, User } from "lucide-react";
+import { useDispatch, useSelector } from "react-redux";
+import md5 from "blueimp-md5";
+import { clearUser } from "../store/client.actions";
 
 export default function Header() {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
+  const user = useSelector((state) => state.client.user);
+
   const menu = [
     { label: "Home", to: "/" },
     { label: "Shop", to: "/shop" },
@@ -14,6 +22,17 @@ export default function Header() {
     { label: "Team", to: "/team" },
     { label: "About", to: "/about" },
   ];
+
+  const email = user?.email || "";
+  const gravatar = email
+    ? `https://www.gravatar.com/avatar/${md5(email.trim().toLowerCase())}?d=mp&s=64`
+    : "";
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    dispatch(clearUser());
+    navigate("/");
+  };
 
   return (
     <header className="w-full border-b border-zinc-200">
@@ -35,9 +54,31 @@ export default function Header() {
           </div>
 
           <div className="flex items-center gap-3">
-            <button className="w-10 h-10 rounded-xl border border-zinc-200 flex items-center justify-center">
-              <User className="w-5 h-5" />
-            </button>
+            {!user ? (
+              <Link
+                to="/login"
+                className="w-10 h-10 rounded-xl border border-zinc-200 flex items-center justify-center"
+                aria-label="Login"
+              >
+                <User className="w-5 h-5" />
+              </Link>
+            ) : (
+              <div className="flex items-center gap-3">
+                <img
+                  src={gravatar}
+                  alt="avatar"
+                  className="w-8 h-8 rounded-full border border-zinc-200"
+                />
+                <span className="text-sm font-medium">{user?.name || "User"}</span>
+                <button
+                  onClick={handleLogout}
+                  className="px-3 py-2 rounded-xl border border-zinc-200 text-sm"
+                >
+                  Logout
+                </button>
+              </div>
+            )}
+
             <button className="w-10 h-10 rounded-xl border border-zinc-200 flex items-center justify-center">
               <ShoppingCart className="w-5 h-5" />
             </button>
