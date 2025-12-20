@@ -1,3 +1,4 @@
-export const SET_CART = "cart/SET_CART";
-export const SET_PAYMENT = "cart/SET_PAYMENT";
-export const SET_ADDRESS = "cart/SET_ADDRESS";
+export const ADD_TO_CART = "ADD_TO_CART";
+export const REMOVE_FROM_CART = "REMOVE_FROM_CART";
+export const TOGGLE_CART_ITEM = "TOGGLE_CART_ITEM";
+export const CLEAR_CART = "CLEAR_CART";
