@@ -1,4 +1,4 @@
-import axios from "axios";
+import api from "../api/axios";
 import {
   setCategories,
   setProductList,
@@ -7,12 +7,6 @@ import {
   setSelectedProduct,
   setSelectedProductFetchState,
 } from "./product.actions";
-
-const API_BASE = "https://workintech-fe-ecommerce.onrender.com";
-
-const api = axios.create({
-  baseURL: API_BASE,
-});
 
 const toArray = (x) => (Array.isArray(x) ? x : []);
 
@@ -40,7 +34,7 @@ export const fetchProducts = (params = {}) => async (dispatch, getState) => {
     offset: state.offset ?? 0,
     ...(state.filter ? { filter: state.filter } : {}),
     ...(state.sort ? { sort: state.sort } : {}),
-    ...params, // dışarıdan gelenler (category gibi) override edebilir
+    ...params, // category gibi dışarıdan gelenler
   };
 
   try {
@@ -48,7 +42,6 @@ export const fetchProducts = (params = {}) => async (dispatch, getState) => {
 
     const res = await api.get("/products", { params: mergedParams });
 
-    // beklenen format: { total: number, products: [] }
     const total = Number(res.data?.total) || 0;
     const products = toArray(res.data?.products);
 
