@@ -9,42 +9,37 @@ import {
 } from "./product.types";
 
 const initialState = {
-  categories: [],           // ✅ mutlaka array
+  categories: [],
   productList: [],
   total: 0,
-  fetchState: "NOT_FETCHED",
+  fetchState: "NOT_FETCHED", // NOT_FETCHED | FETCHING | FETCHED | FAILED
   limit: 25,
   offset: 0,
-  filter: {},
+  filter: "",
 };
 
 export default function productReducer(state = initialState, action) {
   switch (action.type) {
-    case SET_CATEGORIES: {
-      const payload = action.payload;
-      return {
-        ...state,
-        categories: Array.isArray(payload) ? payload : [], // ✅ garanti
-      };
-    }
+    case SET_CATEGORIES:
+      return { ...state, categories: Array.isArray(action.payload) ? action.payload : [] };
 
     case SET_PRODUCT_LIST:
-      return { ...state, productList: action.payload };
+      return { ...state, productList: Array.isArray(action.payload) ? action.payload : [] };
 
     case SET_TOTAL:
-      return { ...state, total: action.payload };
+      return { ...state, total: Number(action.payload) || 0 };
 
     case SET_FETCH_STATE:
       return { ...state, fetchState: action.payload };
 
     case SET_LIMIT:
-      return { ...state, limit: action.payload };
+      return { ...state, limit: Number(action.payload) || 0 };
 
     case SET_OFFSET:
-      return { ...state, offset: action.payload };
+      return { ...state, offset: Number(action.payload) || 0 };
 
     case SET_FILTER:
-      return { ...state, filter: action.payload };
+      return { ...state, filter: action.payload ?? "" };
 
     default:
       return state;

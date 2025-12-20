@@ -1,10 +1,5 @@
 import api from "../api/axios";
-import {
-  setCategories,
-  setFetchState,
-  setProductList,
-  setTotal,
-} from "./product.actions";
+import { setCategories, setFetchState, setProductList, setTotal } from "./product.actions";
 
 /** categories response'u farklı şekillerde gelebilir, normalize edelim */
 const normalizeCategories = (data) => {
@@ -14,31 +9,7 @@ const normalizeCategories = (data) => {
   return [];
 };
 
-export const fetchCategoriesIfNeeded = () => async (dispatch, getState) => {
-  const categories = getState()?.product?.categories;
-  if (Array.isArray(categories) && categories.length > 0) return;
-
-  try {
-    dispatch(setFetchState("FETCHING"));
-
-    const res = await api.get("/categories");
-    const list = normalizeCategories(res.data);
-
-    // id ile uniq (tekrarları kaldır)
-    const uniqueList = Array.from(
-      new Map((list || []).map((c) => [c.id, c])).values()
-    );
-
-    dispatch(setCategories(uniqueList));
-    dispatch(setFetchState("FETCHED"));
-  } catch (err) {
-    console.error("❌ fetchCategoriesIfNeeded error:", err);
-    dispatch(setCategories([]));
-    dispatch(setFetchState("FAILED"));
-  }
-};
-
-/** T13 - products response'u beklenen format: { total: 185, products: [...] } */
+/** products response'u beklenen format: { total: 185, products: [...] } */
 const normalizeProductsResponse = (data) => {
   const total = Number(data?.total ?? 0) || 0;
 
@@ -53,19 +24,76 @@ const normalizeProductsResponse = (data) => {
   return { total, products };
 };
 
+// ✅ params'ı URL'e çeviren yardımcı
+const buildQueryString = (params = {}) => {
+  const qs = new URLSearchParams();
+
+  if (params.category !== undefined && params.category !== null && params.category !== "") {
+    qs.set("category", String(params.category));
+  }
+
+  if (params.filter !== undefined && params.filter !== null && String(params.filter).trim() !== "") {
+    qs.set("filter", String(params.filter).trim());
+  }
+
+  if (params.sort !== undefined && params.sort !== null && String(params.sort).trim() !== "") {
+    qs.set("sort", String(params.sort).trim());
+  }
+
+  const s = qs.toString();
+  return s ? `?${s}` : "";
+};
+
 /**
- * T13: Fetch products and save it in product reducer.
+ * T12/T13: Fetch categories and save it in product reducer.
+ * Endpoint: /categories
+ */
+export const fetchCategories = () => async (dispatch) => {
+  try {
+    dispatch(setFetchState("FETCHING"));
+    const res = await api.get("/categories");
+
+    const list = normalizeCategories(res.data);
+
+    // aynı id'yi iki kere basmayalım
+    const uniqueList = Array.from(new Map((list || []).map((c) => [c.id, c])).values());
+
+    dispatch(setCategories(uniqueList));
+    dispatch(setFetchState("FETCHED"));
+  } catch (err) {
+    console.error("❌ fetchCategories error:", err);
+    dispatch(setCategories([]));
+    dispatch(setFetchState("FAILED"));
+  }
+};
+
+export const fetchCategoriesIfNeeded = () => async (dispatch, getState) => {
+  const list = getState()?.product?.categories;
+  if (Array.isArray(list) && list.length > 0) return;
+  return dispatch(fetchCategories());
+};
+
+/**
+ * T14: Fetch products with query parameters
  * Endpoint: /products
- * Response: { total, products: [...] }
+ * Supports query params: category, filter, sort
  */
 export const fetchProducts = (params = {}) => async (dispatch) => {
   try {
     dispatch(setFetchState("FETCHING"));
 
+    // ✅ Artık URL'i kendimiz üretiyoruz: Network'te query kesin görünecek
+    const query = buildQueryString(params);
+    const url = `/products${query}`;
+
+    console.log("✅ fetchProducts URL:", url); // debug amaçlı (istersen sonra silersin)
+
     // Spinner gözle görülsün diye minimum bekleme
-    // İstersen 0 yapıp kaldırabilirsin.
-    const minDelay = new Promise((r) => setTimeout(r, 400));
-    const resPromise = api.get("/products", { params });
+    const minDelay = new Promise((r) => setTimeout(r, 300));
+    const resPromise = api.get(url, {
+      // cache yüzünden "304" kafa karıştırmasın diye
+      headers: { "Cache-Control": "no-cache" },
+    });
 
     const [res] = await Promise.all([resPromise, minDelay]);
 
@@ -82,10 +110,8 @@ export const fetchProducts = (params = {}) => async (dispatch) => {
   }
 };
 
-export const fetchProductsIfNeeded =
-  (params = {}) =>
-  async (dispatch, getState) => {
-    const list = getState()?.product?.productList;
-    if (Array.isArray(list) && list.length > 0) return;
-    return dispatch(fetchProducts(params));
-  };
+export const fetchProductsIfNeeded = (params = {}) => async (dispatch, getState) => {
+  const list = getState()?.product?.productList;
+  if (Array.isArray(list) && list.length > 0) return;
+  return dispatch(fetchProducts(params));
+};

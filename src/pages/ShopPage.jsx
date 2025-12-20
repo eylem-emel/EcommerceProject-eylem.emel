@@ -1,9 +1,9 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useParams } from "react-router-dom";
 
 import ProductCard from "../components/ProductCard";
-import { fetchCategoriesIfNeeded, fetchProductsIfNeeded } from "../store/product.thunks";
+import { fetchCategoriesIfNeeded, fetchProducts } from "../store/product.thunks";
 
 function slugifyTr(text = "") {
   return String(text)
@@ -20,149 +20,228 @@ function slugifyTr(text = "") {
     .replace(/-+/g, "-");
 }
 
-function genderSlug(g) {
-  const v = String(g || "").toLowerCase();
-  if (v.includes("k") || v.includes("w") || v.includes("f")) return "kadin";
-  if (v.includes("e") || v.includes("m")) return "erkek";
+function genderSlug(gender) {
+  const g = String(gender || "").toLowerCase();
+  if (g === "kadin" || g === "kadın" || g === "women") return "kadin";
+  if (g === "erkek" || g === "men") return "erkek";
   return "kadin";
 }
 
 export default function ShopPage() {
   const dispatch = useDispatch();
+  const { gender, categoryName, categoryId } = useParams();
 
   const categories = useSelector((s) => s.product.categories);
   const products = useSelector((s) => s.product.productList);
   const total = useSelector((s) => s.product.total);
   const fetchState = useSelector((s) => s.product.fetchState);
 
-  const { gender, categoryName, categoryId } = useParams();
+  // T14 states
+  const [filter, setFilter] = useState("");
+  const [sortDraft, setSortDraft] = useState("");
+  const [sort, setSort] = useState("");
 
+  // categories
   useEffect(() => {
     dispatch(fetchCategoriesIfNeeded());
-    // ürünleri her route değişiminde tekrar çekmeyelim, varsa store'dan kullan
-    dispatch(fetchProductsIfNeeded());
   }, [dispatch]);
 
+  // products fetch (T14)
+  useEffect(() => {
+    const params = {};
+    if (categoryId) params.category = Number(categoryId);
+    if (filter.trim()) params.filter = filter.trim();
+    if (sort) params.sort = sort;
+
+    dispatch(fetchProducts(params));
+  }, [dispatch, categoryId, filter, sort]);
+
   const isLoading = fetchState === "FETCHING";
+  const isFailed = fetchState === "FAILED";
 
-  const filteredProducts = useMemo(() => {
-    if (!categoryId) return products || [];
-    const cid = String(categoryId);
+  const selectedCategoryTitle = useMemo(() => {
+    const titleFromUrl = categoryName ? String(categoryName).replaceAll("-", " ") : "";
+    const found = (categories || []).find((c) => String(c.id) === String(categoryId));
+    const titleFromStore = found?.title ?? found?.name ?? "";
+    return titleFromStore || titleFromUrl || "All products";
+  }, [categories, categoryId, categoryName]);
 
-    return (products || []).filter((p) => {
-      const pid = p?.category_id ?? p?.categoryId ?? p?.category?.id;
-      return pid != null && String(pid) === cid;
-    });
-  }, [products, categoryId]);
+  const top5 = useMemo(() => {
+    const list = Array.isArray(categories) ? categories : [];
+    return [...list]
+      .sort((a, b) => (Number(b?.rating) || 0) - (Number(a?.rating) || 0))
+      .slice(0, 5);
+  }, [categories]);
 
   const linkOf = (cat) => {
     const title = cat?.title ?? cat?.name ?? "kategori";
     return `/shop/${genderSlug(cat?.gender)}/${slugifyTr(title)}/${cat?.id}`;
   };
 
+  const applySort = () => {
+    setSort(sortDraft); // requirement: sort sadece Filter butonuyla apply
+  };
+
+  const clearAll = () => {
+    setFilter("");
+    setSortDraft("");
+    setSort("");
+  };
+
   return (
-    <div className="container mx-auto px-6 py-6">
+    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10">
       <div className="flex items-end justify-between gap-4 flex-wrap">
         <div>
-          <h1 className="text-2xl font-extrabold">Shop</h1>
-          <p className="text-sm text-zinc-600 mt-1">
-            Kategoriler linktir, tıklayınca şu formatta route’a gider:
-            <span className="font-mono ml-2 text-zinc-700">
-              /shop/:gender/:categoryName/:categoryId
-            </span>
-          </p>
+          <div className="text-2xl font-bold tracking-tight text-zinc-900">Shop</div>
+          <div className="text-sm text-zinc-600 mt-1">
+            {gender ? <span className="capitalize">{gender}</span> : <span>All</span>}
+            {categoryId ? (
+              <>
+                <span className="mx-2 text-zinc-300">/</span>
+                <span className="capitalize">{selectedCategoryTitle}</span>
+              </>
+            ) : null}
+          </div>
         </div>
 
-        {gender && categoryId && (
-          <div className="text-sm text-zinc-600">
-            Seçili:
-            <span className="ml-2 px-2 py-1 rounded-lg border border-zinc-200 bg-white">
-              <b>{gender}</b> / <b>{categoryName}</b> / <b>{categoryId}</b>
-            </span>
-          </div>
-        )}
-      </div>
-
-      {/* Categories */}
-      <div className="mt-5 w-full flex flex-wrap gap-2">
-        {(categories || []).map((c) => {
-          const active = String(c?.id) === String(categoryId);
-          const title = c?.title ?? c?.name ?? "Kategori";
-
-          return (
-            <Link
-              key={c?.id}
-              to={linkOf(c)}
-              className={[
-                "px-3 py-2 rounded-xl border text-sm transition",
-                active
-                  ? "border-zinc-900 bg-zinc-900 text-white"
-                  : "border-zinc-200 hover:bg-zinc-50",
-              ].join(" ")}
+        <div className="flex items-center gap-3 flex-wrap">
+          <div className="flex items-center gap-2">
+            <label className="text-xs text-zinc-600">Sort</label>
+            <select
+              value={sortDraft}
+              onChange={(e) => setSortDraft(e.target.value)}
+              className="h-9 rounded-xl border border-zinc-200 bg-white px-3 text-sm outline-none focus:ring-2 focus:ring-orange-200"
             >
-              {title}
-            </Link>
-          );
-        })}
-
-        {(!categories || categories.length === 0) && (
-          <div className="text-sm text-zinc-500">
-            Kategoriler yükleniyor / bulunamadı.
+              <option value="">—</option>
+              <option value="price:asc">price:asc</option>
+              <option value="price:desc">price:desc</option>
+              <option value="rating:asc">rating:asc</option>
+              <option value="rating:desc">rating:desc</option>
+            </select>
           </div>
-        )}
+
+          <div className="flex items-center gap-2">
+            <label className="text-xs text-zinc-600">Filter</label>
+            <input
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+              placeholder="örn: siyah"
+              className="h-9 w-56 rounded-xl border border-zinc-200 bg-white px-3 text-sm outline-none focus:ring-2 focus:ring-orange-200"
+            />
+          </div>
+
+          <button
+            onClick={applySort}
+            className="h-9 rounded-xl bg-zinc-900 px-4 text-sm font-semibold text-white hover:bg-zinc-800"
+          >
+            Filter
+          </button>
+
+          <button
+            onClick={clearAll}
+            className="h-9 rounded-xl border border-zinc-200 bg-white px-3 text-sm font-semibold text-zinc-800 hover:bg-zinc-50"
+          >
+            Clear
+          </button>
+        </div>
       </div>
 
-      {/* Products Panel */}
+      <div className="mt-8">
+        <div className="flex items-center justify-between">
+          <div className="text-sm font-semibold text-zinc-900">Top categories</div>
+          <Link to="/shop" className="text-xs font-semibold text-orange-600 hover:text-orange-700">
+            Reset category
+          </Link>
+        </div>
+
+        <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+          {(top5 || []).map((c) => (
+            <Link
+              key={c.id}
+              to={linkOf(c)}
+              className="group rounded-2xl border border-zinc-200 bg-white p-3 hover:shadow-sm transition"
+            >
+              <div className="aspect-[4/3] rounded-xl bg-zinc-100 overflow-hidden">
+                {c?.img ? (
+                  <img
+                    src={c.img}
+                    alt={c?.title ?? c?.name ?? "category"}
+                    className="h-full w-full object-cover group-hover:scale-[1.03] transition"
+                  />
+                ) : (
+                  <div className="h-full w-full grid place-items-center text-xs text-zinc-500">
+                    No image
+                  </div>
+                )}
+              </div>
+
+              <div className="mt-2 flex items-center justify-between gap-2">
+                <div className="text-sm font-semibold text-zinc-900 truncate">
+                  {c?.title ?? c?.name}
+                </div>
+                <div className="text-xs text-zinc-500">{(Number(c?.rating) || 0).toFixed(1)}</div>
+              </div>
+
+              <div className="text-xs text-zinc-500 mt-1 capitalize">{genderSlug(c?.gender)}</div>
+            </Link>
+          ))}
+        </div>
+      </div>
+
       <div className="mt-8 rounded-2xl border border-zinc-200 bg-white p-6 relative">
         <div className="flex items-center justify-between gap-4 flex-wrap">
           <div>
             <div className="text-sm font-semibold">Products</div>
             <div className="text-xs text-zinc-600 mt-1">
-              API Total: <b>{total}</b> • Shown: <b>{filteredProducts.length}</b>
+              {categoryId ? (
+                <>
+                  Category: <span className="font-semibold text-zinc-900">#{categoryId}</span>
+                </>
+              ) : (
+                <>All categories</>
+              )}
+
+              {sort ? (
+                <>
+                  <span className="mx-2 text-zinc-300">•</span>
+                  Sort: <span className="font-semibold text-zinc-900">{sort}</span>
+                </>
+              ) : null}
+
+              {filter.trim() ? (
+                <>
+                  <span className="mx-2 text-zinc-300">•</span>
+                  Filter: <span className="font-semibold text-zinc-900">“{filter.trim()}”</span>
+                </>
+              ) : null}
             </div>
           </div>
 
-          {isLoading && (
-            <div className="inline-flex items-center gap-2 text-sm text-zinc-600">
-              <span className="inline-block w-4 h-4 rounded-full border-2 border-zinc-300 border-t-zinc-900 animate-spin" />
-              Loading products…
-            </div>
-          )}
+          <div className="text-xs text-zinc-500">
+            Total: <span className="font-semibold text-zinc-900">{total}</span>
+          </div>
         </div>
 
-        {/* overlay spinner */}
         {isLoading && (
-          <div className="absolute inset-0 rounded-2xl bg-white/60 flex items-center justify-center">
-            <div className="flex items-center gap-3 px-4 py-3 rounded-2xl border border-zinc-200 bg-white shadow-sm">
-              <span className="inline-block w-5 h-5 rounded-full border-2 border-zinc-300 border-t-zinc-900 animate-spin" />
-              <div className="text-sm text-zinc-700">Fetching products…</div>
-            </div>
+          <div className="absolute inset-0 bg-white/70 backdrop-blur-[1px] grid place-items-center rounded-2xl">
+            <div className="text-sm text-zinc-700">Loading...</div>
           </div>
         )}
 
-        {!isLoading && fetchState === "FAILED" && (
-          <div className="mt-4 text-sm text-red-600">
-            Ürünler yüklenemedi. API yanıtını kontrol et.
+        {isFailed && (
+          <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+            Ürünler yüklenemedi. API / bağlantıyı kontrol et.
           </div>
         )}
 
-        <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {filteredProducts.map((p) => (
-            <ProductCard
-              key={p.id}
-              id={p.id}
-              title={p.name || p.title || p.product_name || "Untitled"}
-              price={p.price != null ? `$${p.price}` : ""}
-              images={p.images}
-              rating={p.rating}
-            />
+        <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {(products || []).map((p) => (
+            <ProductCard key={p.id} id={p.id} title={p?.title ?? p?.name} price={p?.price} />
           ))}
         </div>
 
-        {!isLoading && filteredProducts.length === 0 && fetchState !== "FAILED" && (
-          <div className="mt-4 text-sm text-zinc-500">
-            Bu kategoride ürün bulunamadı.
-          </div>
+        {!isLoading && !isFailed && (!products || products.length === 0) && (
+          <div className="mt-4 text-sm text-zinc-500">Ürün bulunamadı.</div>
         )}
       </div>
     </div>
