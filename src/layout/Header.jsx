@@ -36,19 +36,23 @@ export default function Header() {
       .map((c) => {
         const id = c.id;
         const name = c.title; // ✅
-        const gender = c.gender === "k" ? "kadin" : c.gender === "e" ? "erkek" : null;
+        const gender =
+          c.gender === "k" ? "kadin" : c.gender === "e" ? "erkek" : null;
 
         // slug için en sağlam kaynak: code içindeki 2. parça
         // "k:ayakkabi" => "ayakkabi"
-        const codeSlug = typeof c.code === "string" && c.code.includes(":")
-          ? c.code.split(":")[1]
-          : null;
+        const codeSlug =
+          typeof c.code === "string" && c.code.includes(":")
+            ? c.code.split(":")[1]
+            : null;
 
         const slug = codeSlug ? slugify(codeSlug) : slugify(name);
 
         return { id, name, gender, slug };
       })
-      .filter((x) => x.id && x.name && (x.gender === "kadin" || x.gender === "erkek"));
+      .filter(
+        (x) => x.id && x.name && (x.gender === "kadin" || x.gender === "erkek")
+      );
   }, [safeCategories]);
 
   const womenCats = useMemo(
@@ -70,6 +74,7 @@ export default function Header() {
   return (
     <header className="w-full border-b bg-white">
       <div className="max-w-7xl mx-auto px-4 py-3 flex items-center gap-4">
+        {/* Brand */}
         <Link to="/" className="flex items-center gap-2">
           <div className="w-9 h-9 rounded-lg bg-black text-white flex items-center justify-center font-bold">
             E
@@ -80,12 +85,15 @@ export default function Header() {
           </div>
         </Link>
 
+        {/* Nav */}
         <nav className="hidden md:flex items-center gap-2 ml-4 relative">
           <NavLink
             to="/"
             className={({ isActive }) =>
               `px-3 py-2 rounded-md text-sm ${
-                isActive ? "bg-black text-white" : "text-gray-700 hover:bg-gray-100"
+                isActive
+                  ? "bg-black text-white"
+                  : "text-gray-700 hover:bg-gray-100"
               }`
             }
           >
@@ -102,7 +110,9 @@ export default function Header() {
               to="/shop"
               className={({ isActive }) =>
                 `px-3 py-2 rounded-md text-sm inline-flex items-center gap-1 ${
-                  isActive ? "bg-black text-white" : "text-gray-700 hover:bg-gray-100"
+                  isActive
+                    ? "bg-black text-white"
+                    : "text-gray-700 hover:bg-gray-100"
                 }`
               }
             >
@@ -110,8 +120,9 @@ export default function Header() {
             </NavLink>
 
             {shopOpen && (
-              <div className="absolute left-0 top-full mt-2 w-[520px] bg-white border rounded-lg shadow-lg p-6 z-50">
+              <div className="absolute left-0 top-full mt-2 w-[520px] bg-white border rounded-lg shadow-lg p-6 z-[9999] pointer-events-auto">
                 <div className="grid grid-cols-2 gap-10">
+                  {/* Kadın */}
                   <div>
                     <div className="font-semibold mb-3">Kadın</div>
                     <div className="space-y-2">
@@ -134,6 +145,7 @@ export default function Header() {
                     </div>
                   </div>
 
+                  {/* Erkek */}
                   <div>
                     <div className="font-semibold mb-3">Erkek</div>
                     <div className="space-y-2">
@@ -170,7 +182,9 @@ export default function Header() {
             to="/team"
             className={({ isActive }) =>
               `px-3 py-2 rounded-md text-sm ${
-                isActive ? "bg-black text-white" : "text-gray-700 hover:bg-gray-100"
+                isActive
+                  ? "bg-black text-white"
+                  : "text-gray-700 hover:bg-gray-100"
               }`
             }
           >
@@ -181,7 +195,9 @@ export default function Header() {
             to="/about"
             className={({ isActive }) =>
               `px-3 py-2 rounded-md text-sm ${
-                isActive ? "bg-black text-white" : "text-gray-700 hover:bg-gray-100"
+                isActive
+                  ? "bg-black text-white"
+                  : "text-gray-700 hover:bg-gray-100"
               }`
             }
           >
@@ -192,7 +208,9 @@ export default function Header() {
             to="/contact"
             className={({ isActive }) =>
               `px-3 py-2 rounded-md text-sm ${
-                isActive ? "bg-black text-white" : "text-gray-700 hover:bg-gray-100"
+                isActive
+                  ? "bg-black text-white"
+                  : "text-gray-700 hover:bg-gray-100"
               }`
             }
           >
@@ -200,6 +218,7 @@ export default function Header() {
           </NavLink>
         </nav>
 
+        {/* Search */}
         <form onSubmit={handleSearchSubmit} className="flex-1 flex justify-center">
           <div className="w-full max-w-xl flex items-center gap-2 border rounded-lg px-3 py-2">
             <input
@@ -208,12 +227,16 @@ export default function Header() {
               placeholder="Search products..."
               className="w-full outline-none text-sm"
             />
-            <button type="submit" className="text-sm px-3 py-1 rounded-md bg-black text-white">
+            <button
+              type="submit"
+              className="text-sm px-3 py-1 rounded-md bg-black text-white"
+            >
               Search
             </button>
           </div>
         </form>
 
+        {/* Right */}
         <div className="hidden md:flex items-center gap-2">
           <NavLink
             to="/login"
