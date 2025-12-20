@@ -22,11 +22,8 @@ function slugifyTr(text = "") {
     .replace(/-+/g, "-");
 }
 
-function genderSlug(g) {
-  const v = String(g || "").toLowerCase();
-  if (v.includes("k") || v.includes("w") || v.includes("f")) return "kadin";
-  if (v.includes("e") || v.includes("m")) return "erkek";
-  return "kadin";
+function genderSlugFromApi(gender) {
+  return String(gender).toLowerCase() === "e" ? "erkek" : "kadin"; // k default
 }
 
 export default function Header() {
@@ -43,7 +40,6 @@ export default function Header() {
     dispatch(fetchCategoriesIfNeeded());
   }, [dispatch]);
 
-  // ✅ her koşulda array garanti
   const categories = Array.isArray(categoriesRaw) ? categoriesRaw : [];
 
   const grouped = useMemo(() => {
@@ -51,7 +47,7 @@ export default function Header() {
     const men = [];
 
     categories.forEach((c) => {
-      const g = genderSlug(c.gender || c?.code || c?.title);
+      const g = genderSlugFromApi(c.gender);
       if (g === "kadin") women.push(c);
       else men.push(c);
     });
@@ -70,7 +66,7 @@ export default function Header() {
   };
 
   const linkOf = (cat) => {
-    const g = genderSlug(cat.gender);
+    const g = genderSlugFromApi(cat.gender);
     const name = slugifyTr(cat.title);
     return `/shop/${g}/${name}/${cat.id}`;
   };

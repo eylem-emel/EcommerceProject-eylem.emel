@@ -18,33 +18,39 @@ function slugifyTr(text = "") {
     .replace(/-+/g, "-");
 }
 
-function genderSlug(g) {
-  const v = String(g || "").toLowerCase();
-  if (v.includes("k") || v.includes("w") || v.includes("f")) return "kadin";
-  if (v.includes("e") || v.includes("m")) return "erkek";
-  return "kadin"; // fallback
+// Backend: gender "k" (kadın) / "e" (erkek)
+function genderSlugFromApi(gender) {
+  return String(gender).toLowerCase() === "e" ? "erkek" : "kadin";
+}
+
+// Bazı img url'lerinde boşluk olabiliyor: "onrender.com /assets..."
+function safeImg(url = "") {
+  return String(url).replace(/\s+/g, "");
 }
 
 export default function HomePage() {
   const dispatch = useDispatch();
-  const categories = useSelector((s) => s.product.categories);
+  const categoriesRaw = useSelector((s) => s.product.categories);
 
   useEffect(() => {
     dispatch(fetchCategoriesIfNeeded());
   }, [dispatch]);
 
+  // her koşulda array garanti
+  const categories = Array.isArray(categoriesRaw) ? categoriesRaw : [];
+
   const top5 = useMemo(() => {
-    const arr = [...(categories || [])];
+    const arr = [...categories];
     arr.sort((a, b) => (Number(b.rating) || 0) - (Number(a.rating) || 0));
     return arr.slice(0, 5);
   }, [categories]);
 
   const linkOf = (cat) =>
-    `/shop/${genderSlug(cat.gender)}/${slugifyTr(cat.title)}/${cat.id}`;
+    `/shop/${genderSlugFromApi(cat.gender)}/${slugifyTr(cat.title)}/${cat.id}`;
 
   return (
     <div className="w-full">
-      {/* HERO (senin mevcut tasarımın varsa bunu kendi hero'nla değiştirebilirsin) */}
+      {/* HERO */}
       <section className="w-full bg-sky-500 text-white rounded-2xl overflow-hidden">
         <div className="container mx-auto px-6 py-16">
           <div className="text-sm tracking-widest opacity-90">SUMMER 2025</div>
@@ -81,35 +87,41 @@ export default function HomePage() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
-            {top5.map((c) => (
-              <Link
-                key={c.id}
-                to={linkOf(c)}
-                className="rounded-2xl border border-zinc-200 overflow-hidden hover:bg-zinc-50 transition"
-              >
-                {/* image: API img vermezse placeholder */}
-                <div className="h-24 bg-zinc-100 flex items-center justify-center text-xs text-zinc-500">
-                  {c.img ? (
-                    <img
-                      src={c.img}
-                      alt={c.title}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <span>image</span>
-                  )}
-                </div>
+            {top5.map((c) => {
+              const imgUrl = safeImg(c.img);
 
-                <div className="p-3">
-                  <div className="text-sm font-semibold line-clamp-1">
-                    {c.title}
+              return (
+                <Link
+                  key={c.id}
+                  to={linkOf(c)}
+                  className="rounded-2xl border border-zinc-200 overflow-hidden hover:bg-zinc-50 transition"
+                >
+                  <div className="h-24 bg-zinc-100">
+                    {c.img ? (
+                      <img
+                        src={imgUrl}
+                        alt={c.title}
+                        className="w-full h-full object-cover"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="h-full flex items-center justify-center text-xs text-zinc-500">
+                        image
+                      </div>
+                    )}
                   </div>
-                  <div className="text-xs text-zinc-600 mt-1">
-                    rating: {Number(c.rating) || 0}
+
+                  <div className="p-3">
+                    <div className="text-sm font-semibold line-clamp-1">
+                      {c.title}
+                    </div>
+                    <div className="text-xs text-zinc-600 mt-1">
+                      rating: {Number(c.rating) || 0}
+                    </div>
                   </div>
-                </div>
-              </Link>
-            ))}
+                </Link>
+              );
+            })}
 
             {top5.length === 0 && (
               <div className="text-sm text-zinc-500">

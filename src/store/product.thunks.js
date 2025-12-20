@@ -2,10 +2,6 @@ import api from "../api/axios";
 import { setCategories, setFetchState } from "./product.actions";
 
 const normalizeCategories = (data) => {
-  // Olası formatlar:
-  // 1) [ ... ]
-  // 2) { categories: [ ... ] }
-  // 3) { data: [ ... ] }
   if (Array.isArray(data)) return data;
   if (Array.isArray(data?.categories)) return data.categories;
   if (Array.isArray(data?.data)) return data.data;
@@ -14,7 +10,6 @@ const normalizeCategories = (data) => {
 
 export const fetchCategoriesIfNeeded = () => async (dispatch, getState) => {
   const categories = getState()?.product?.categories;
-
   if (Array.isArray(categories) && categories.length > 0) return;
 
   try {
@@ -23,11 +18,14 @@ export const fetchCategoriesIfNeeded = () => async (dispatch, getState) => {
     const res = await api.get("/categories");
     const list = normalizeCategories(res.data);
 
+    console.log("✅ /categories response length:", list.length);
+    console.log("✅ sample category:", list[0]);
+
     dispatch(setCategories(list));
     dispatch(setFetchState("FETCHED"));
   } catch (err) {
-    console.error("fetchCategoriesIfNeeded error:", err);
-    dispatch(setCategories([])); // ✅ crash olmasın
+    console.error("❌ fetchCategoriesIfNeeded error:", err);
+    dispatch(setCategories([]));
     dispatch(setFetchState("FAILED"));
   }
 };
