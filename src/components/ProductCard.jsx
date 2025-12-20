@@ -1,21 +1,40 @@
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
-export default function ProductCard({ id, title, price }) {
+export default function ProductCard({ product }) {
+  const navigate = useNavigate();
+
+  const slugify = (text) =>
+    text
+      .toLowerCase()
+      .replace(/ğ/g, "g")
+      .replace(/ü/g, "u")
+      .replace(/ş/g, "s")
+      .replace(/ı/g, "i")
+      .replace(/ö/g, "o")
+      .replace(/ç/g, "c")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "");
+
+  const handleClick = () => {
+    navigate(
+      `/shop/${product.gender}/${product.categoryName}/${product.category_id}/${slugify(
+        product.name
+      )}/${product.id}`
+    );
+  };
+
   return (
-    <Link
-      to={`/product/${id}`}
-      className="w-full border border-zinc-200 rounded-2xl overflow-hidden flex flex-col hover:border-zinc-300"
+    <div
+      onClick={handleClick}
+      className="cursor-pointer border rounded-lg p-3 hover:shadow-lg transition"
     >
-      <div className="w-full aspect-[4/3] bg-zinc-100" />
-
-      <div className="p-4 flex flex-col gap-2">
-        <div className="text-sm font-medium text-zinc-900">{title}</div>
-        <div className="text-sm text-zinc-600">{price}</div>
-
-        <div className="mt-2 px-4 py-2 rounded-xl bg-zinc-900 text-white text-sm text-center">
-          View details
-        </div>
-      </div>
-    </Link>
+      <img
+        src={product.images?.[0]?.url}
+        alt={product.name}
+        className="w-full h-64 object-cover rounded"
+      />
+      <h3 className="mt-2 font-semibold">{product.name}</h3>
+      <p className="text-sm text-gray-500">{product.price} ₺</p>
+    </div>
   );
 }

@@ -1,197 +1,103 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, NavLink } from "react-router-dom";
+import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchCategoriesIfNeeded } from "../store/product.thunks";
 
-function slugifyTr(text = "") {
-  return String(text)
-    .toLowerCase()
-    .trim()
-    .replaceAll("ğ", "g")
-    .replaceAll("ü", "u")
-    .replaceAll("ş", "s")
-    .replaceAll("ı", "i")
-    .replaceAll("ö", "o")
-    .replaceAll("ç", "c")
-    .replace(/[^a-z0-9\s-]/g, "")
-    .replace(/\s+/g, "-")
-    .replace(/-+/g, "-");
-}
-
-function genderSlug(g) {
-  const v = String(g || "").toLowerCase();
-  // API tarafında kadın için "kadin", "women", "w" vs gelebilir
-  if (v.includes("k") || v.includes("w") || v.includes("f")) return "kadin";
-  if (v.includes("e") || v.includes("m")) return "erkek";
-  return "kadin";
-}
-
 export default function Header() {
   const dispatch = useDispatch();
-  const categories = useSelector((s) => s.product.categories);
+  const navigate = useNavigate();
 
-  const [open, setOpen] = useState(false);
+  const rawProductList = useSelector(
+    (state) => state.product.productList
+  );
+
+  // 🔒 HER DURUMA KARŞI ARRAY GARANTİSİ
+  const productList = Array.isArray(rawProductList)
+    ? rawProductList
+    : rawProductList?.products || rawProductList?.data || [];
+
+  const [q, setQ] = useState("");
 
   useEffect(() => {
     dispatch(fetchCategoriesIfNeeded());
   }, [dispatch]);
 
-  const { womenCats, menCats } = useMemo(() => {
-    const list = Array.isArray(categories) ? categories : [];
+  const categories = useMemo(() => {
+    const map = new Map();
 
-    const women = [];
-    const men = [];
+    productList.forEach((p) => {
+      const categoryId = p.category_id ?? p.categoryId;
+      const categoryName =
+        p.categoryName ?? p.category_name ?? p.category;
+      const gender = p.gender ?? "all";
 
-    for (const c of list) {
-      const g = genderSlug(c?.gender);
-      if (g === "erkek") men.push(c);
-      else women.push(c);
-    }
+      if (!categoryId || !categoryName) return;
 
-    // İstersen alfabetik sırala:
-    women.sort((a, b) => String(a?.title ?? "").localeCompare(String(b?.title ?? ""), "tr"));
-    men.sort((a, b) => String(a?.title ?? "").localeCompare(String(b?.title ?? ""), "tr"));
+      const key = `${gender}-${categoryId}-${categoryName}`;
+      if (!map.has(key)) {
+        map.set(key, { gender, categoryId, categoryName });
+      }
+    });
 
-    return { womenCats: women, menCats: men };
-  }, [categories]);
+    return Array.from(map.values()).sort((a, b) =>
+      String(a.categoryName).localeCompare(String(b.categoryName), "tr")
+    );
+  }, [productList]);
 
-  const toShop = (c) => {
-    const g = genderSlug(c?.gender);
-    const name = slugifyTr(c?.title ?? c?.name ?? "kategori");
-    return `/shop/${g}/${name}/${c?.id}`;
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    if (!q.trim()) return;
+    navigate(`/shop?search=${encodeURIComponent(q.trim())}`);
   };
 
   return (
-    <header className="w-full border-b border-zinc-200 bg-white">
-      <div className="container mx-auto px-6 h-16 flex items-center justify-between">
-        {/* Logo */}
-        <Link to="/" className="font-extrabold text-lg">
-          E-Commerce
+    <header className="w-full border-b bg-white">
+      <div className="max-w-7xl mx-auto px-4 py-3 flex items-center gap-4">
+        <Link to="/" className="font-bold text-lg">
+          Ecommerce
         </Link>
 
-        {/* Nav */}
-        <nav className="flex items-center gap-6 text-sm">
-          <NavLink
-            to="/"
-            className={({ isActive }) =>
-              isActive ? "font-semibold text-zinc-900" : "text-zinc-600 hover:text-zinc-900"
-            }
-          >
-            Home
-          </NavLink>
-
-          {/* SHOP + DROPDOWN */}
-          <div
-            className="relative"
-            onMouseEnter={() => setOpen(true)}
-            onMouseLeave={() => setOpen(false)}
-          >
-            <NavLink
-              to="/shop"
-              className={({ isActive }) =>
-                (isActive ? "font-semibold text-zinc-900" : "text-zinc-600 hover:text-zinc-900") +
-                " inline-flex items-center gap-1"
-              }
-            >
-              Shop
-              <span className="text-xs">▾</span>
-            </NavLink>
-
-            {/* Dropdown */}
-            {open && (
-              <div className="absolute left-1/2 -translate-x-1/2 top-[calc(100%+14px)] z-50 w-[520px] rounded-2xl border border-zinc-200 bg-white shadow-lg p-6">
-                <div className="grid grid-cols-2 gap-10">
-                  {/* Kadın */}
-                  <div>
-                    <div className="font-semibold text-zinc-900 mb-3">Kadın</div>
-                    <div className="flex flex-col gap-2">
-                      {womenCats.length === 0 ? (
-                        <span className="text-sm text-zinc-500">Kategori yok</span>
-                      ) : (
-                        womenCats.map((c) => (
-                          <Link
-                            key={c.id}
-                            to={toShop(c)}
-                            className="text-sm text-zinc-600 hover:text-zinc-900"
-                            onClick={() => setOpen(false)}
-                          >
-                            {c.title}
-                          </Link>
-                        ))
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Erkek */}
-                  <div>
-                    <div className="font-semibold text-zinc-900 mb-3">Erkek</div>
-                    <div className="flex flex-col gap-2">
-                      {menCats.length === 0 ? (
-                        <span className="text-sm text-zinc-500">Kategori yok</span>
-                      ) : (
-                        menCats.map((c) => (
-                          <Link
-                            key={c.id}
-                            to={toShop(c)}
-                            className="text-sm text-zinc-600 hover:text-zinc-900"
-                            onClick={() => setOpen(false)}
-                          >
-                            {c.title}
-                          </Link>
-                        ))
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-
-          <NavLink
-            to="/about"
-            className={({ isActive }) =>
-              isActive ? "font-semibold text-zinc-900" : "text-zinc-600 hover:text-zinc-900"
-            }
-          >
-            About
-          </NavLink>
-
-          <NavLink
-            to="/team"
-            className={({ isActive }) =>
-              isActive ? "font-semibold text-zinc-900" : "text-zinc-600 hover:text-zinc-900"
-            }
-          >
-            Team
-          </NavLink>
-
-          <NavLink
-            to="/contact"
-            className={({ isActive }) =>
-              isActive ? "font-semibold text-zinc-900" : "text-zinc-600 hover:text-zinc-900"
-            }
-          >
-            Contact
-          </NavLink>
-
-          <NavLink
-            to="/login"
-            className={({ isActive }) =>
-              isActive ? "font-semibold text-zinc-900" : "text-zinc-600 hover:text-zinc-900"
-            }
-          >
-            Login
-          </NavLink>
-
-          <NavLink
-            to="/signup"
-            className={({ isActive }) =>
-              isActive ? "font-semibold text-zinc-900" : "text-zinc-600 hover:text-zinc-900"
-            }
-          >
-            Signup
-          </NavLink>
+        <nav className="hidden md:flex gap-3">
+          <NavLink to="/" className="px-3 py-2">Home</NavLink>
+          <NavLink to="/shop" className="px-3 py-2">Shop</NavLink>
+          <NavLink to="/about" className="px-3 py-2">About</NavLink>
+          <NavLink to="/contact" className="px-3 py-2">Contact</NavLink>
         </nav>
+
+        <form onSubmit={handleSearchSubmit} className="flex-1">
+          <input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Search products..."
+            className="w-full border rounded px-3 py-2 text-sm"
+          />
+        </form>
+
+        <div className="hidden md:flex gap-2">
+          <NavLink to="/login">Login</NavLink>
+          <NavLink to="/signup">Sign up</NavLink>
+        </div>
+      </div>
+
+      <div className="border-t bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 py-2 flex gap-2 overflow-x-auto">
+          <NavLink
+            to="/shop"
+            className="text-xs px-3 py-1 border rounded-full"
+          >
+            All
+          </NavLink>
+
+          {categories.map((c) => (
+            <NavLink
+              key={`${c.gender}-${c.categoryId}`}
+              to={`/shop/${c.gender}/${c.categoryName}/${c.categoryId}`}
+              className="text-xs px-3 py-1 border rounded-full"
+            >
+              {c.categoryName}
+            </NavLink>
+          ))}
+        </div>
       </div>
     </header>
   );

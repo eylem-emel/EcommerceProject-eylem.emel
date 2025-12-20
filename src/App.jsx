@@ -1,6 +1,4 @@
 import { Routes, Route } from "react-router-dom";
-import { useEffect, useRef } from "react";
-import { useDispatch } from "react-redux";
 
 import Header from "./layout/Header";
 import PageContent from "./layout/PageContent";
@@ -15,19 +13,7 @@ import AboutPage from "./pages/AboutPage";
 import SignupPage from "./pages/SignupPage";
 import LoginPage from "./pages/LoginPage";
 
-import { verifyTokenThunk } from "./store/auth/auth.thunks";
-
 export default function App() {
-  const dispatch = useDispatch();
-  const hasRun = useRef(false);
-
-  useEffect(() => {
-    if (!hasRun.current) {
-      dispatch(verifyTokenThunk());
-      hasRun.current = true;
-    }
-  }, [dispatch]);
-
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
@@ -36,13 +22,20 @@ export default function App() {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/shop" element={<ShopPage />} />
-          <Route path="/product/:id" element={<ProductDetailPage />} />
+
+          <Route
+            path="/shop/:gender/:categoryName/:categoryId/:productNameSlug/:productId"
+            element={<ProductDetailPage />}
+          />
+
+          {/* eski path bozulmasın diye */}
+          <Route path="/product/:productId" element={<ProductDetailPage />} />
+
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/team" element={<TeamPage />} />
           <Route path="/about" element={<AboutPage />} />
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/login" element={<LoginPage />} />
-          <Route path="/shop/:gender/:categoryName/:categoryId" element={<ShopPage />} />
         </Routes>
       </PageContent>
 
