@@ -1,33 +1,64 @@
 import { Link, NavLink } from "react-router-dom";
 import { useSelector } from "react-redux";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 export default function Header() {
   const cart = useSelector((state) => state.shoppingCart?.cart || []);
+
   const [open, setOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  // Dropdown dışına tıklayınca kapat
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (!dropdownRef.current) return;
+      if (!dropdownRef.current.contains(e.target)) setOpen(false);
+    };
+
+    if (open) document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [open]);
 
   const { totalCount, totalPrice } = useMemo(() => {
     const totalCountCalc = cart.reduce((sum, item) => sum + (item.count || 0), 0);
-    const totalPriceCalc = cart.reduce(
-      (sum, item) => sum + (Number(item.product?.price) || 0) * (item.count || 0),
-      0
-    );
+
+    const totalPriceCalc = cart.reduce((sum, item) => {
+      const price = Number(item.product?.price) || 0;
+      const count = item.count || 0;
+      return sum + price * count;
+    }, 0);
+
     return { totalCount: totalCountCalc, totalPrice: totalPriceCalc };
   }, [cart]);
 
-  const getImg = (p) => p?.images?.[0] || p?.image || p?.img || "";
+  // Ürün adı alanı farklı olabilir
   const getName = (p) => p?.name || p?.title || "Ürün";
+
+  // Görsel alanı farklı olabilir: images[0] string / images[0].url / image / img
+  const getImg = (p) => {
+    if (!p) return "";
+
+    const first = Array.isArray(p.images) ? p.images[0] : null;
+    if (typeof first === "string") return first;
+    if (first && typeof first === "object" && first.url) return first.url;
+
+    if (p.image) return p.image;
+    if (p.img) return p.img;
+
+    return "";
+  };
+
   const getPrice = (p) => Number(p?.price) || 0;
 
   return (
     <header className="bg-white border-b">
       <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-        {/* Logo */}
+        {/* LOGO */}
         <Link to="/" className="text-xl font-bold">
           E-Commerce
         </Link>
 
-        {/* Menü */}
+        {/* MENÜ */}
         <nav className="hidden md:flex items-center gap-6">
           <NavLink to="/" className={({ isActive }) => (isActive ? "font-semibold" : "")}>
             Home
@@ -46,8 +77,8 @@ export default function Header() {
           </NavLink>
         </nav>
 
-        {/* Sağ ikonlar */}
-        <div className="flex items-center gap-6 relative">
+        {/* SAĞ TARAF */}
+        <div className="flex items-center gap-6 relative" ref={dropdownRef}>
           <NavLink to="/login" className="flex items-center gap-2">
             <span>Hesabım</span>
           </NavLink>
@@ -56,7 +87,7 @@ export default function Header() {
             <span>Favorilerim</span>
           </NavLink>
 
-          {/* Sepet */}
+          {/* SEPET */}
           <button
             type="button"
             onClick={() => setOpen((v) => !v)}
@@ -68,7 +99,7 @@ export default function Header() {
             </span>
           </button>
 
-          {/* Dropdown */}
+          {/* DROPDOWN */}
           {open && (
             <div className="absolute right-0 top-12 w-96 bg-white shadow-xl rounded-xl border p-4 z-50">
               <div className="flex items-center justify-between mb-3">
@@ -95,8 +126,13 @@ export default function Header() {
                         src={getImg(item.product)}
                         alt={getName(item.product)}
                         className="w-14 h-14 object-cover rounded-lg bg-gray-100"
+                        onError={(e) => {
+                          e.currentTarget.src =
+                            "https://via.placeholder.com/56x56.png?text=No+Img";
+                        }}
                       />
-                      <div className="flex-1">
+
+                      <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium line-clamp-2">
                           {getName(item.product)}
                         </p>
@@ -104,7 +140,8 @@ export default function Header() {
                           Adet: {item.count} • {getPrice(item.product).toFixed(2)} TL
                         </p>
                       </div>
-                      <div className="text-sm font-semibold">
+
+                      <div className="text-sm font-semibold whitespace-nowrap">
                         {(getPrice(item.product) * (item.count || 0)).toFixed(2)} TL
                       </div>
                     </div>
@@ -127,7 +164,11 @@ export default function Header() {
                     >
                       Sepete Git
                     </Link>
-                    <button className="bg-orange-500 text-white rounded-lg py-2 font-medium">
+
+                    <button
+                      type="button"
+                      className="bg-orange-500 text-white rounded-lg py-2 font-medium"
+                    >
                       Siparişi Tamamla
                     </button>
                   </div>
