@@ -1,42 +1,77 @@
 import axios from "axios";
 import {
+  setCategories,
+  setProductList,
+  setTotal,
+  setFetchState,
   setSelectedProduct,
   setSelectedProductFetchState,
-  setProductList,
 } from "./product.actions";
 
 const API_BASE = "https://workintech-fe-ecommerce.onrender.com";
 
-const normalizeList = (data) => {
-  if (Array.isArray(data)) return data;
-  if (Array.isArray(data?.products)) return data.products;
-  if (Array.isArray(data?.data)) return data.data;
-  if (Array.isArray(data?.items)) return data.items;
-  return [];
-};
+const api = axios.create({
+  baseURL: API_BASE,
+});
 
+const toArray = (x) => (Array.isArray(x) ? x : []);
+
+// ✅ T12: /categories
 export const fetchCategoriesIfNeeded = () => async (dispatch, getState) => {
-  try {
-    const state = getState();
-    const list = normalizeList(state?.product?.productList);
-    if (list.length > 0) return;
+  const { categories } = getState().product;
 
-    const response = await axios.get(`${API_BASE}/products`);
-    dispatch(setProductList(normalizeList(response.data)));
-  } catch (error) {
-    console.error("Product list fetch error:", error);
-    dispatch(setProductList([]));
+  if (Array.isArray(categories) && categories.length > 0) return;
+
+  try {
+    const res = await api.get("/categories");
+    dispatch(setCategories(toArray(res.data)));
+  } catch (err) {
+    console.error("fetchCategoriesIfNeeded error:", err);
+    dispatch(setCategories([]));
   }
 };
 
+// ✅ T13–T15: /products (query params: category, filter, sort, limit, offset)
+export const fetchProducts = (params = {}) => async (dispatch, getState) => {
+  const state = getState().product;
+
+  const mergedParams = {
+    limit: state.limit ?? 25,
+    offset: state.offset ?? 0,
+    ...(state.filter ? { filter: state.filter } : {}),
+    ...(state.sort ? { sort: state.sort } : {}),
+    ...params, // dışarıdan gelenler (category gibi) override edebilir
+  };
+
+  try {
+    dispatch(setFetchState("FETCHING"));
+
+    const res = await api.get("/products", { params: mergedParams });
+
+    // beklenen format: { total: number, products: [] }
+    const total = Number(res.data?.total) || 0;
+    const products = toArray(res.data?.products);
+
+    dispatch(setTotal(total));
+    dispatch(setProductList(products));
+    dispatch(setFetchState("FETCHED"));
+  } catch (err) {
+    console.error("fetchProducts error:", err);
+    dispatch(setFetchState("FAILED"));
+  }
+};
+
+// ✅ T16: /products/:productId
 export const fetchProductById = (productId) => async (dispatch) => {
   try {
-    dispatch(setSelectedProductFetchState("loading"));
-    const response = await axios.get(`${API_BASE}/products/${productId}`);
-    dispatch(setSelectedProduct(response.data));
-    dispatch(setSelectedProductFetchState("success"));
-  } catch (error) {
-    console.error("Product fetch error:", error);
-    dispatch(setSelectedProductFetchState("error"));
+    dispatch(setSelectedProductFetchState("FETCHING"));
+
+    const res = await api.get(`/products/${productId}`);
+
+    dispatch(setSelectedProduct(res.data));
+    dispatch(setSelectedProductFetchState("FETCHED"));
+  } catch (err) {
+    console.error("fetchProductById error:", err);
+    dispatch(setSelectedProductFetchState("FAILED"));
   }
 };

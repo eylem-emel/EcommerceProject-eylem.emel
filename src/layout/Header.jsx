@@ -3,18 +3,24 @@ import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchCategoriesIfNeeded } from "../store/product.thunks";
 
+const slugify = (text) =>
+  String(text || "")
+    .toLowerCase()
+    .replace(/ğ/g, "g")
+    .replace(/ü/g, "u")
+    .replace(/ş/g, "s")
+    .replace(/ı/g, "i")
+    .replace(/ö/g, "o")
+    .replace(/ç/g, "c")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
 export default function Header() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const rawProductList = useSelector((state) => state.product.productList);
-
-  const productList = Array.isArray(rawProductList)
-    ? rawProductList
-    : rawProductList?.products ||
-      rawProductList?.data ||
-      rawProductList?.items ||
-      [];
+  const categories = useSelector((state) => state.product.categories);
+  const safeCategories = Array.isArray(categories) ? categories : [];
 
   const [q, setQ] = useState("");
   const [shopOpen, setShopOpen] = useState(false);
@@ -23,60 +29,36 @@ export default function Header() {
     dispatch(fetchCategoriesIfNeeded());
   }, [dispatch]);
 
-  // API categoryName göndermiyorsa demo map:
-  const CATEGORY_NAME_BY_ID = {
-    1: "Bags",
-    2: "Belts",
-    3: "Cosmetics",
-    4: "Hats",
-    5: "Shoes",
-    6: "T-Shirts",
-    7: "Jackets",
-    8: "Pants",
-  };
+  // ✅ API gerçek shape:
+  // { id, code: "k:ayakkabi", title: "Ayakkabı", img, rating, gender: "k" }
+  const normalized = useMemo(() => {
+    return safeCategories
+      .map((c) => {
+        const id = c.id;
+        const name = c.title; // ✅
+        const gender = c.gender === "k" ? "kadin" : c.gender === "e" ? "erkek" : null;
 
-  // Kadın / Erkek kategorilerini ayrı listeleyelim
-  const { womenCats, menCats } = useMemo(() => {
-    const womenMap = new Map();
-    const menMap = new Map();
-
-    productList.forEach((p) => {
-      const genderRaw = (p.gender ?? "").toString().toLowerCase();
-      const gender =
-        genderRaw.includes("kadin") || genderRaw.includes("women")
-          ? "kadin"
-          : genderRaw.includes("erkek") || genderRaw.includes("men")
-          ? "erkek"
+        // slug için en sağlam kaynak: code içindeki 2. parça
+        // "k:ayakkabi" => "ayakkabi"
+        const codeSlug = typeof c.code === "string" && c.code.includes(":")
+          ? c.code.split(":")[1]
           : null;
 
-      const categoryId = p.category_id ?? p.categoryId;
-      const categoryNameRaw =
-        p.categoryName ??
-        p.category_name ??
-        p.category ??
-        CATEGORY_NAME_BY_ID[categoryId];
+        const slug = codeSlug ? slugify(codeSlug) : slugify(name);
 
-      const categoryName = categoryNameRaw ? String(categoryNameRaw) : null;
+        return { id, name, gender, slug };
+      })
+      .filter((x) => x.id && x.name && (x.gender === "kadin" || x.gender === "erkek"));
+  }, [safeCategories]);
 
-      if (!gender || !categoryId || !categoryName) return;
-
-      const key = `${categoryId}-${categoryName}`;
-
-      if (gender === "kadin") {
-        if (!womenMap.has(key)) womenMap.set(key, { gender, categoryId, categoryName });
-      } else {
-        if (!menMap.has(key)) menMap.set(key, { gender, categoryId, categoryName });
-      }
-    });
-
-    const sortFn = (a, b) =>
-      String(a.categoryName).localeCompare(String(b.categoryName), "en");
-
-    return {
-      womenCats: Array.from(womenMap.values()).sort(sortFn),
-      menCats: Array.from(menMap.values()).sort(sortFn),
-    };
-  }, [productList]);
+  const womenCats = useMemo(
+    () => normalized.filter((c) => c.gender === "kadin"),
+    [normalized]
+  );
+  const menCats = useMemo(
+    () => normalized.filter((c) => c.gender === "erkek"),
+    [normalized]
+  );
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
@@ -88,7 +70,6 @@ export default function Header() {
   return (
     <header className="w-full border-b bg-white">
       <div className="max-w-7xl mx-auto px-4 py-3 flex items-center gap-4">
-        {/* Brand */}
         <Link to="/" className="flex items-center gap-2">
           <div className="w-9 h-9 rounded-lg bg-black text-white flex items-center justify-center font-bold">
             E
@@ -99,7 +80,6 @@ export default function Header() {
           </div>
         </Link>
 
-        {/* Nav */}
         <nav className="hidden md:flex items-center gap-2 ml-4 relative">
           <NavLink
             to="/"
@@ -126,55 +106,62 @@ export default function Header() {
                 }`
               }
             >
-              Shop
-              <span className="text-xs">▾</span>
+              Shop <span className="text-xs">▾</span>
             </NavLink>
 
             {shopOpen && (
               <div className="absolute left-0 top-full mt-2 w-[520px] bg-white border rounded-lg shadow-lg p-6 z-50">
                 <div className="grid grid-cols-2 gap-10">
-                  {/* Kadın */}
                   <div>
                     <div className="font-semibold mb-3">Kadın</div>
                     <div className="space-y-2">
-                      {(womenCats.length ? womenCats : Object.entries(CATEGORY_NAME_BY_ID).map(([id, name]) => ({
-                        gender: "kadin",
-                        categoryId: Number(id),
-                        categoryName: name,
-                      }))).slice(0, 8).map((c) => (
-                        <Link
-                          key={`w-${c.categoryId}-${c.categoryName}`}
-                          to={`/shop/${c.gender}/${c.categoryName}/${c.categoryId}`}
-                          className="block text-sm text-gray-700 hover:underline"
+                      {womenCats.map((c) => (
+                        <NavLink
+                          key={`w-${c.id}`}
+                          to={`/shop/kadin/${c.slug}/${c.id}`}
+                          className={({ isActive }) =>
+                            `block text-sm ${
+                              isActive
+                                ? "font-semibold underline"
+                                : "text-gray-700 hover:underline"
+                            }`
+                          }
                           onClick={() => setShopOpen(false)}
                         >
-                          {c.categoryName}
-                        </Link>
+                          {c.name}
+                        </NavLink>
                       ))}
                     </div>
                   </div>
 
-                  {/* Erkek */}
                   <div>
                     <div className="font-semibold mb-3">Erkek</div>
                     <div className="space-y-2">
-                      {(menCats.length ? menCats : Object.entries(CATEGORY_NAME_BY_ID).map(([id, name]) => ({
-                        gender: "erkek",
-                        categoryId: Number(id),
-                        categoryName: name,
-                      }))).slice(0, 8).map((c) => (
-                        <Link
-                          key={`m-${c.categoryId}-${c.categoryName}`}
-                          to={`/shop/${c.gender}/${c.categoryName}/${c.categoryId}`}
-                          className="block text-sm text-gray-700 hover:underline"
+                      {menCats.map((c) => (
+                        <NavLink
+                          key={`m-${c.id}`}
+                          to={`/shop/erkek/${c.slug}/${c.id}`}
+                          className={({ isActive }) =>
+                            `block text-sm ${
+                              isActive
+                                ? "font-semibold underline"
+                                : "text-gray-700 hover:underline"
+                            }`
+                          }
                           onClick={() => setShopOpen(false)}
                         >
-                          {c.categoryName}
-                        </Link>
+                          {c.name}
+                        </NavLink>
                       ))}
                     </div>
                   </div>
                 </div>
+
+                {normalized.length === 0 && (
+                  <div className="mt-4 text-xs text-gray-500">
+                    Kategoriler yükleniyor / bulunamadı.
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -213,7 +200,6 @@ export default function Header() {
           </NavLink>
         </nav>
 
-        {/* Search */}
         <form onSubmit={handleSearchSubmit} className="flex-1 flex justify-center">
           <div className="w-full max-w-xl flex items-center gap-2 border rounded-lg px-3 py-2">
             <input
@@ -228,12 +214,17 @@ export default function Header() {
           </div>
         </form>
 
-        {/* Right */}
         <div className="hidden md:flex items-center gap-2">
-          <NavLink to="/login" className="px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-100">
+          <NavLink
+            to="/login"
+            className="px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-100"
+          >
             Login
           </NavLink>
-          <NavLink to="/signup" className="px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-100">
+          <NavLink
+            to="/signup"
+            className="px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-100"
+          >
             Sign up
           </NavLink>
         </div>
