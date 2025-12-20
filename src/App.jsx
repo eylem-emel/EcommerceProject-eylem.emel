@@ -21,8 +21,17 @@ export default function App() {
       <PageContent>
         <Routes>
           <Route path="/" element={<HomePage />} />
+
+          {/* Shop ana sayfa */}
           <Route path="/shop" element={<ShopPage />} />
 
+          {/* Kategori filtre route'u (Header kategori linkleri için) */}
+          <Route
+            path="/shop/:gender/:categoryName/:categoryId"
+            element={<ShopPage />}
+          />
+
+          {/* Product Detail */}
           <Route
             path="/shop/:gender/:categoryName/:categoryId/:productNameSlug/:productId"
             element={<ProductDetailPage />}

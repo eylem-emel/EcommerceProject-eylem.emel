@@ -12,11 +12,13 @@ const initialState = {
 
 export default function productReducer(state = initialState, action) {
   switch (action.type) {
-    case SET_PRODUCT_LIST:
+    case SET_PRODUCT_LIST: {
+      const nextList = Array.isArray(action.payload) ? action.payload : [];
       return {
         ...state,
-        productList: action.payload,
+        productList: nextList,
       };
+    }
 
     case SET_SELECTED_PRODUCT:
       return {
