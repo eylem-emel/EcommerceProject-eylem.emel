@@ -3,7 +3,7 @@ import { useDispatch } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 
-import { loginThunk } from "../store/auth/auth.thunks";
+import { loginThunk } from "../store/client.thunks";
 
 export default function LoginPage() {
   const {
@@ -21,11 +21,10 @@ export default function LoginPage() {
   const onSubmit = async (data) => {
     try {
       await dispatch(
-        loginThunk({
-          email: data.email,
-          password: data.password,
-          remember: data.remember,
-        })
+        loginThunk(
+          { email: data.email, password: data.password },
+          data.remember
+        )
       );
 
       toast.success("Login successful");
@@ -57,9 +56,7 @@ export default function LoginPage() {
             })}
           />
           {errors.email && (
-            <p className="text-red-500 text-sm mt-1">
-              {errors.email.message}
-            </p>
+            <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>
           )}
         </div>
 
