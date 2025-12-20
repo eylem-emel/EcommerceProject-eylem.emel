@@ -3,7 +3,7 @@ import { useDispatch } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 
-import { loginThunk } from "../store/auth.thunks";
+import { loginThunk } from "../store/auth/auth.thunks";
 
 export default function LoginPage() {
   const {

@@ -1,4 +1,6 @@
 import { Routes, Route } from "react-router-dom";
+import { useEffect, useRef } from "react";
+import { useDispatch } from "react-redux";
 
 import Header from "./layout/Header";
 import PageContent from "./layout/PageContent";
@@ -13,15 +15,21 @@ import AboutPage from "./pages/AboutPage";
 import SignupPage from "./pages/SignupPage";
 import LoginPage from "./pages/LoginPage";
 
-import { ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { verifyTokenThunk } from "./store/auth/auth.thunks";
 
 export default function App() {
+  const dispatch = useDispatch();
+  const hasRun = useRef(false);
+
+  useEffect(() => {
+    if (!hasRun.current) {
+      dispatch(verifyTokenThunk());
+      hasRun.current = true;
+    }
+  }, [dispatch]);
+
   return (
     <div className="min-h-screen flex flex-col">
-      {/* Toaster burada durursa tüm sayfalarda görünür */}
-      <ToastContainer position="top-right" autoClose={2500} hideProgressBar />
-
       <Header />
 
       <PageContent>
@@ -32,7 +40,6 @@ export default function App() {
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/team" element={<TeamPage />} />
           <Route path="/about" element={<AboutPage />} />
-
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/login" element={<LoginPage />} />
         </Routes>
