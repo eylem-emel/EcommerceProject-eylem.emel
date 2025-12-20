@@ -1,11 +1,7 @@
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
 import { useEffect, useMemo, useState } from "react";
-import md5 from "blueimp-md5";
-
-import { clearUser } from "../store/client.actions";
+import { Link, NavLink } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
 import { fetchCategoriesIfNeeded } from "../store/product.thunks";
-import { clearAuthToken } from "../api/axios";
 
 function slugifyTr(text = "") {
   return String(text)
@@ -22,17 +18,17 @@ function slugifyTr(text = "") {
     .replace(/-+/g, "-");
 }
 
-function genderSlugFromApi(gender) {
-  return String(gender).toLowerCase() === "e" ? "erkek" : "kadin"; // k default
+function genderSlug(g) {
+  const v = String(g || "").toLowerCase();
+  // API tarafında kadın için "kadin", "women", "w" vs gelebilir
+  if (v.includes("k") || v.includes("w") || v.includes("f")) return "kadin";
+  if (v.includes("e") || v.includes("m")) return "erkek";
+  return "kadin";
 }
 
 export default function Header() {
-  const user = useSelector((state) => state.client.user);
-  const categoriesRaw = useSelector((state) => state.product.categories);
-
-  const location = useLocation();
-  const navigate = useNavigate();
   const dispatch = useDispatch();
+  const categories = useSelector((s) => s.product.categories);
 
   const [open, setOpen] = useState(false);
 
@@ -40,94 +36,109 @@ export default function Header() {
     dispatch(fetchCategoriesIfNeeded());
   }, [dispatch]);
 
-  const categories = Array.isArray(categoriesRaw) ? categoriesRaw : [];
+  const { womenCats, menCats } = useMemo(() => {
+    const list = Array.isArray(categories) ? categories : [];
 
-  const grouped = useMemo(() => {
     const women = [];
     const men = [];
 
-    categories.forEach((c) => {
-      const g = genderSlugFromApi(c.gender);
-      if (g === "kadin") women.push(c);
-      else men.push(c);
-    });
+    for (const c of list) {
+      const g = genderSlug(c?.gender);
+      if (g === "erkek") men.push(c);
+      else women.push(c);
+    }
 
-    women.sort((a, b) => String(a.title).localeCompare(String(b.title), "tr"));
-    men.sort((a, b) => String(a.title).localeCompare(String(b.title), "tr"));
+    // İstersen alfabetik sırala:
+    women.sort((a, b) => String(a?.title ?? "").localeCompare(String(b?.title ?? ""), "tr"));
+    men.sort((a, b) => String(a?.title ?? "").localeCompare(String(b?.title ?? ""), "tr"));
 
-    return { women, men };
+    return { womenCats: women, menCats: men };
   }, [categories]);
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    clearAuthToken();
-    dispatch(clearUser());
-    navigate("/");
-  };
-
-  const linkOf = (cat) => {
-    const g = genderSlugFromApi(cat.gender);
-    const name = slugifyTr(cat.title);
-    return `/shop/${g}/${name}/${cat.id}`;
+  const toShop = (c) => {
+    const g = genderSlug(c?.gender);
+    const name = slugifyTr(c?.title ?? c?.name ?? "kategori");
+    return `/shop/${g}/${name}/${c?.id}`;
   };
 
   return (
-    <header className="bg-white shadow">
-      <div className="container mx-auto flex items-center justify-between py-4 px-6">
-        <Link to="/" className="text-xl font-bold">
+    <header className="w-full border-b border-zinc-200 bg-white">
+      <div className="container mx-auto px-6 h-16 flex items-center justify-between">
+        {/* Logo */}
+        <Link to="/" className="font-extrabold text-lg">
           E-Commerce
         </Link>
 
-        <nav className="flex gap-6 items-center">
+        {/* Nav */}
+        <nav className="flex items-center gap-6 text-sm">
+          <NavLink
+            to="/"
+            className={({ isActive }) =>
+              isActive ? "font-semibold text-zinc-900" : "text-zinc-600 hover:text-zinc-900"
+            }
+          >
+            Home
+          </NavLink>
+
+          {/* SHOP + DROPDOWN */}
           <div
             className="relative"
             onMouseEnter={() => setOpen(true)}
             onMouseLeave={() => setOpen(false)}
           >
-            <button
-              type="button"
-              className="flex items-center gap-1"
-              onClick={() => setOpen((s) => !s)}
+            <NavLink
+              to="/shop"
+              className={({ isActive }) =>
+                (isActive ? "font-semibold text-zinc-900" : "text-zinc-600 hover:text-zinc-900") +
+                " inline-flex items-center gap-1"
+              }
             >
-              <span>Shop</span>
+              Shop
               <span className="text-xs">▾</span>
-            </button>
+            </NavLink>
 
+            {/* Dropdown */}
             {open && (
-              <div className="absolute left-0 top-full mt-3 w-[520px] rounded-2xl border border-zinc-200 bg-white shadow-xl p-5 z-50">
-                <div className="grid grid-cols-2 gap-6">
+              <div className="absolute left-1/2 -translate-x-1/2 top-[calc(100%+14px)] z-50 w-[520px] rounded-2xl border border-zinc-200 bg-white shadow-lg p-6">
+                <div className="grid grid-cols-2 gap-10">
+                  {/* Kadın */}
                   <div>
-                    <div className="text-sm font-semibold mb-3">Kadın</div>
+                    <div className="font-semibold text-zinc-900 mb-3">Kadın</div>
                     <div className="flex flex-col gap-2">
-                      {grouped.women.map((cat) => (
-                        <Link
-                          key={cat.id}
-                          to={linkOf(cat)}
-                          className="text-sm text-zinc-700 hover:text-zinc-900"
-                        >
-                          {cat.title}
-                        </Link>
-                      ))}
-                      {grouped.women.length === 0 && (
-                        <div className="text-sm text-zinc-400">Kategori yok</div>
+                      {womenCats.length === 0 ? (
+                        <span className="text-sm text-zinc-500">Kategori yok</span>
+                      ) : (
+                        womenCats.map((c) => (
+                          <Link
+                            key={c.id}
+                            to={toShop(c)}
+                            className="text-sm text-zinc-600 hover:text-zinc-900"
+                            onClick={() => setOpen(false)}
+                          >
+                            {c.title}
+                          </Link>
+                        ))
                       )}
                     </div>
                   </div>
 
+                  {/* Erkek */}
                   <div>
-                    <div className="text-sm font-semibold mb-3">Erkek</div>
+                    <div className="font-semibold text-zinc-900 mb-3">Erkek</div>
                     <div className="flex flex-col gap-2">
-                      {grouped.men.map((cat) => (
-                        <Link
-                          key={cat.id}
-                          to={linkOf(cat)}
-                          className="text-sm text-zinc-700 hover:text-zinc-900"
-                        >
-                          {cat.title}
-                        </Link>
-                      ))}
-                      {grouped.men.length === 0 && (
-                        <div className="text-sm text-zinc-400">Kategori yok</div>
+                      {menCats.length === 0 ? (
+                        <span className="text-sm text-zinc-500">Kategori yok</span>
+                      ) : (
+                        menCats.map((c) => (
+                          <Link
+                            key={c.id}
+                            to={toShop(c)}
+                            className="text-sm text-zinc-600 hover:text-zinc-900"
+                            onClick={() => setOpen(false)}
+                          >
+                            {c.title}
+                          </Link>
+                        ))
                       )}
                     </div>
                   </div>
@@ -136,41 +147,50 @@ export default function Header() {
             )}
           </div>
 
-          <Link to="/about">About</Link>
-          <Link to="/team">Team</Link>
-          <Link to="/contact">Contact</Link>
+          <NavLink
+            to="/about"
+            className={({ isActive }) =>
+              isActive ? "font-semibold text-zinc-900" : "text-zinc-600 hover:text-zinc-900"
+            }
+          >
+            About
+          </NavLink>
 
-          {!user ? (
-            <>
-              <Link
-                to="/login"
-                state={{ from: location.pathname + location.search }}
-                className="font-medium"
-              >
-                Login
-              </Link>
-              <Link to="/signup" className="font-medium">
-                Signup
-              </Link>
-            </>
-          ) : (
-            <div className="flex items-center gap-3">
-              <img
-                src={`https://www.gravatar.com/avatar/${md5(
-                  user.email.trim().toLowerCase()
-                )}?s=40&d=identicon`}
-                alt="avatar"
-                className="w-8 h-8 rounded-full"
-              />
-              <span className="text-sm font-medium">{user.email}</span>
-              <button
-                onClick={handleLogout}
-                className="text-sm text-red-600 font-medium"
-              >
-                Logout
-              </button>
-            </div>
-          )}
+          <NavLink
+            to="/team"
+            className={({ isActive }) =>
+              isActive ? "font-semibold text-zinc-900" : "text-zinc-600 hover:text-zinc-900"
+            }
+          >
+            Team
+          </NavLink>
+
+          <NavLink
+            to="/contact"
+            className={({ isActive }) =>
+              isActive ? "font-semibold text-zinc-900" : "text-zinc-600 hover:text-zinc-900"
+            }
+          >
+            Contact
+          </NavLink>
+
+          <NavLink
+            to="/login"
+            className={({ isActive }) =>
+              isActive ? "font-semibold text-zinc-900" : "text-zinc-600 hover:text-zinc-900"
+            }
+          >
+            Login
+          </NavLink>
+
+          <NavLink
+            to="/signup"
+            className={({ isActive }) =>
+              isActive ? "font-semibold text-zinc-900" : "text-zinc-600 hover:text-zinc-900"
+            }
+          >
+            Signup
+          </NavLink>
         </nav>
       </div>
     </header>
