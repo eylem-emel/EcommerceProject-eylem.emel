@@ -1,5 +1,5 @@
 import api from "../api/axios";
-import { setCategories, setFetchState, setProductList, setTotal } from "./product.actions";
+import { setCategories, setFetchState, setOffset, setProductList, setTotal } from "./product.actions";
 
 /** categories response'u farklı şekillerde gelebilir, normalize edelim */
 const normalizeCategories = (data) => {
@@ -40,6 +40,15 @@ const buildQueryString = (params = {}) => {
     qs.set("sort", String(params.sort).trim());
   }
 
+  // T15: pagination params
+  if (params.limit !== undefined && params.limit !== null && Number.isFinite(Number(params.limit))) {
+    qs.set("limit", String(Number(params.limit)));
+  }
+
+  if (params.offset !== undefined && params.offset !== null && Number.isFinite(Number(params.offset))) {
+    qs.set("offset", String(Number(params.offset)));
+  }
+
   const s = qs.toString();
   return s ? `?${s}` : "";
 };
@@ -78,12 +87,20 @@ export const fetchCategoriesIfNeeded = () => async (dispatch, getState) => {
  * Endpoint: /products
  * Supports query params: category, filter, sort
  */
-export const fetchProducts = (params = {}) => async (dispatch) => {
+export const fetchProducts = (params = {}) => async (dispatch, getState) => {
   try {
     dispatch(setFetchState("FETCHING"));
 
+    // T15: limit/offset default'ları store'dan gelsin
+    const state = getState?.();
+    const fallbackLimit = Number(state?.product?.limit ?? 25) || 25;
+    const fallbackOffset = Number(state?.product?.offset ?? 0) || 0;
+
+    const limit = params.limit !== undefined ? Number(params.limit) : fallbackLimit;
+    const offset = params.offset !== undefined ? Number(params.offset) : fallbackOffset;
+
     // ✅ Artık URL'i kendimiz üretiyoruz: Network'te query kesin görünecek
-    const query = buildQueryString(params);
+    const query = buildQueryString({ ...params, limit, offset });
     const url = `/products${query}`;
 
     console.log("✅ fetchProducts URL:", url); // debug amaçlı (istersen sonra silersin)
@@ -99,8 +116,21 @@ export const fetchProducts = (params = {}) => async (dispatch) => {
 
     const { total, products } = normalizeProductsResponse(res.data);
 
+    // T15: infinite scroll / pagination destek
+    // append: true => mevcut listeye ekle
+    const append = Boolean(params?.append);
+    const currentList = append
+      ? (Array.isArray(state?.product?.productList) ? state.product.productList : [])
+      : [];
+
+    const nextList = append ? [...currentList, ...products] : products;
+
     dispatch(setTotal(total));
-    dispatch(setProductList(products));
+    dispatch(setProductList(nextList));
+
+    // offset store'da "next offset" gibi tutulur: bir sonraki istekte kaç ürün geçileceği
+    dispatch(setOffset(offset + (Array.isArray(products) ? products.length : 0)));
+
     dispatch(setFetchState("FETCHED"));
   } catch (err) {
     console.error("❌ fetchProducts error:", err);
