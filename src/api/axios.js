@@ -4,11 +4,8 @@ const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
 });
 
-/* 🔐 TOKEN HELPERS */
 export const setAuthToken = (token) => {
-  if (token) {
-    api.defaults.headers.common["Authorization"] = token;
-  }
+  if (token) api.defaults.headers.common["Authorization"] = token; // Bearer YOK
 };
 
 export const clearAuthToken = () => {

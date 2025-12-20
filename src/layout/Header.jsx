@@ -5,6 +5,7 @@ import md5 from "blueimp-md5";
 
 import { clearUser } from "../store/client.actions";
 import { fetchCategoriesIfNeeded } from "../store/product.thunks";
+import { clearAuthToken } from "../api/axios";
 
 function slugifyTr(text = "") {
   return String(text)
@@ -23,17 +24,14 @@ function slugifyTr(text = "") {
 
 function genderSlug(g) {
   const v = String(g || "").toLowerCase();
-  if (v.includes("k")) return "kadin";
-  if (v.includes("w")) return "kadin";
-  if (v.includes("f")) return "kadin";
-  if (v.includes("e")) return "erkek";
-  if (v.includes("m")) return "erkek";
-  return "kadin"; // fallback
+  if (v.includes("k") || v.includes("w") || v.includes("f")) return "kadin";
+  if (v.includes("e") || v.includes("m")) return "erkek";
+  return "kadin";
 }
 
 export default function Header() {
   const user = useSelector((state) => state.client.user);
-  const categories = useSelector((state) => state.product.categories);
+  const categoriesRaw = useSelector((state) => state.product.categories);
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -45,17 +43,19 @@ export default function Header() {
     dispatch(fetchCategoriesIfNeeded());
   }, [dispatch]);
 
+  // ✅ her koşulda array garanti
+  const categories = Array.isArray(categoriesRaw) ? categoriesRaw : [];
+
   const grouped = useMemo(() => {
     const women = [];
     const men = [];
 
-    (categories || []).forEach((c) => {
+    categories.forEach((c) => {
       const g = genderSlug(c.gender || c?.code || c?.title);
       if (g === "kadin") women.push(c);
       else men.push(c);
     });
 
-    // sadece görünüm için alfabetik
     women.sort((a, b) => String(a.title).localeCompare(String(b.title), "tr"));
     men.sort((a, b) => String(a.title).localeCompare(String(b.title), "tr"));
 
@@ -63,8 +63,9 @@ export default function Header() {
   }, [categories]);
 
   const handleLogout = () => {
-    dispatch(clearUser());
     localStorage.removeItem("token");
+    clearAuthToken();
+    dispatch(clearUser());
     navigate("/");
   };
 
@@ -77,14 +78,11 @@ export default function Header() {
   return (
     <header className="bg-white shadow">
       <div className="container mx-auto flex items-center justify-between py-4 px-6">
-        {/* Logo */}
         <Link to="/" className="text-xl font-bold">
           E-Commerce
         </Link>
 
-        {/* Nav */}
         <nav className="flex gap-6 items-center">
-          {/* SHOP DROPDOWN */}
           <div
             className="relative"
             onMouseEnter={() => setOpen(true)}
@@ -102,7 +100,6 @@ export default function Header() {
             {open && (
               <div className="absolute left-0 top-full mt-3 w-[520px] rounded-2xl border border-zinc-200 bg-white shadow-xl p-5 z-50">
                 <div className="grid grid-cols-2 gap-6">
-                  {/* KADIN */}
                   <div>
                     <div className="text-sm font-semibold mb-3">Kadın</div>
                     <div className="flex flex-col gap-2">
@@ -121,7 +118,6 @@ export default function Header() {
                     </div>
                   </div>
 
-                  {/* ERKEK */}
                   <div>
                     <div className="text-sm font-semibold mb-3">Erkek</div>
                     <div className="flex flex-col gap-2">
@@ -148,7 +144,6 @@ export default function Header() {
           <Link to="/team">Team</Link>
           <Link to="/contact">Contact</Link>
 
-          {/* Auth area */}
           {!user ? (
             <>
               <Link

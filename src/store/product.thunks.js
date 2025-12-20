@@ -1,10 +1,17 @@
-import { api } from "../api/axios";
+import api from "../api/axios";
 import { setCategories, setFetchState } from "./product.actions";
 
-/**
- * GET /categories
- * - categories redux'a yazılır (product.categories)
- */
+const normalizeCategories = (data) => {
+  // Olası formatlar:
+  // 1) [ ... ]
+  // 2) { categories: [ ... ] }
+  // 3) { data: [ ... ] }
+  if (Array.isArray(data)) return data;
+  if (Array.isArray(data?.categories)) return data.categories;
+  if (Array.isArray(data?.data)) return data.data;
+  return [];
+};
+
 export const fetchCategoriesIfNeeded = () => async (dispatch, getState) => {
   const categories = getState()?.product?.categories;
 
@@ -12,11 +19,15 @@ export const fetchCategoriesIfNeeded = () => async (dispatch, getState) => {
 
   try {
     dispatch(setFetchState("FETCHING"));
+
     const res = await api.get("/categories");
-    dispatch(setCategories(res.data || []));
+    const list = normalizeCategories(res.data);
+
+    dispatch(setCategories(list));
     dispatch(setFetchState("FETCHED"));
   } catch (err) {
     console.error("fetchCategoriesIfNeeded error:", err);
+    dispatch(setCategories([])); // ✅ crash olmasın
     dispatch(setFetchState("FAILED"));
   }
 };
