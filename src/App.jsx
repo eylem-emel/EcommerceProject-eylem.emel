@@ -16,6 +16,7 @@ import TeamPage from "./pages/TeamPage";
 import AboutPage from "./pages/AboutPage";
 import SignupPage from "./pages/SignupPage";
 import LoginPage from "./pages/LoginPage";
+import CartPage from "./pages/CartPage";
 
 import { verifyTokenThunk } from "./store/client.thunks";
 
@@ -50,6 +51,7 @@ export default function App() {
           <Route path="/about" element={<AboutPage />} />
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/cart" element={<CartPage />} />
         </Routes>
       </PageContent>
 

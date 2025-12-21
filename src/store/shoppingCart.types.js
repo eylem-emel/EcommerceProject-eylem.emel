@@ -1,4 +1,5 @@
 export const ADD_TO_CART = "ADD_TO_CART";
+export const DECREASE_CART_ITEM = "DECREASE_CART_ITEM";
 export const REMOVE_FROM_CART = "REMOVE_FROM_CART";
 export const TOGGLE_CART_ITEM = "TOGGLE_CART_ITEM";
 export const CLEAR_CART = "CLEAR_CART";
