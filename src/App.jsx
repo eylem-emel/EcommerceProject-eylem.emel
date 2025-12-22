@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Switch, Route, Redirect } from "./routerCompat";
 import { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { ToastContainer } from "react-toastify";
@@ -35,59 +35,45 @@ export default function App() {
       <Header />
 
       <PageContent>
-        <Routes>
-          <Route path="/" element={<HomePage />} />
+        <Switch>
+          <Route exact path="/" component={HomePage} />
 
           {/* SHOP */}
-          <Route path="/shop" element={<ShopPage />} />
-          <Route
-            path="/shop/:gender/:categoryName/:categoryId"
-            element={<ShopPage />}
-          />
           <Route
             path="/shop/:gender/:categoryName/:categoryId/:productNameSlug/:productId"
-            element={<ProductDetailPage />}
+            component={ProductDetailPage}
           />
+          <Route
+            path="/shop/:gender/:categoryName/:categoryId"
+            component={ShopPage}
+          />
+          <Route exact path="/shop" component={ShopPage} />
 
           {/* (opsiyonel) eski detail route */}
-          <Route path="/product/:productId" element={<ProductDetailPage />} />
+          <Route path="/product/:productId" component={ProductDetailPage} />
 
           {/* STATIC */}
-          <Route path="/contact" element={<ContactPage />} />
-          <Route path="/team" element={<TeamPage />} />
-          <Route path="/about" element={<AboutPage />} />
-          <Route path="/signup" element={<SignupPage />} />
-          <Route path="/login" element={<LoginPage />} />
+          <Route path="/contact" component={ContactPage} />
+          <Route path="/team" component={TeamPage} />
+          <Route path="/about" component={AboutPage} />
+          <Route path="/signup" component={SignupPage} />
+          <Route path="/login" component={LoginPage} />
 
           {/* CART */}
-          <Route path="/cart" element={<CartPage />} />
+          <Route path="/cart" component={CartPage} />
 
           {/* CHECKOUT */}
-          <Route
-            path="/create-order"
-            element={
-              <ProtectedRoute>
-                <CreateOrderPage />
-              </ProtectedRoute>
-            }
-          />
+          <ProtectedRoute path="/create-order" component={CreateOrderPage} />
 
           {/* eski /order path kırılmasın -> /create-order'a gönder */}
-          <Route path="/order" element={<Navigate to="/create-order" replace />} />
+          <Route path="/order" render={() => <Redirect to="/create-order" />} />
 
           {/* ORDERS */}
-          <Route
-            path="/orders"
-            element={
-              <ProtectedRoute>
-                <PreviousOrdersPage />
-              </ProtectedRoute>
-            }
-          />
+          <ProtectedRoute path="/orders" component={PreviousOrdersPage} />
 
           {/* 404 */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+          <Route path="*" render={() => <Redirect to="/" />} />
+        </Switch>
       </PageContent>
 
       <Footer />

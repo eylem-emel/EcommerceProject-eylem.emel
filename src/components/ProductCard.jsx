@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { useHistory } from "../routerCompat";
 
 const slugify = (text) =>
   String(text || "")
@@ -13,7 +13,7 @@ const slugify = (text) =>
     .replace(/^-+|-+$/g, "");
 
 export default function ProductCard({ product }) {
-  const navigate = useNavigate();
+  const history = useHistory();
 
   const genderRaw = (product.gender ?? "").toString().toLowerCase();
   const gender =
@@ -32,7 +32,7 @@ export default function ProductCard({ product }) {
   const productNameSlug = slugify(product.name);
 
   const handleClick = () => {
-    navigate(
+    history.push(
       `/shop/${gender}/${slugify(categoryName)}/${categoryId}/${productNameSlug}/${product.id}`
     );
   };

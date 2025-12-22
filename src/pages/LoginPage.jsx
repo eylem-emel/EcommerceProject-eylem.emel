@@ -1,7 +1,9 @@
 import { useForm } from "react-hook-form";
 import { useDispatch } from "react-redux";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
+
+import { useHistory } from "../routerCompat";
 
 import { loginThunk } from "../store/client.thunks";
 
@@ -13,10 +15,10 @@ export default function LoginPage() {
   } = useForm();
 
   const dispatch = useDispatch();
-  const navigate = useNavigate();
   const location = useLocation();
+  const history = useHistory();
 
-  const from = location.state?.from;
+  const from = location.state?.from?.pathname || "/";
 
   const onSubmit = async (data) => {
     try {
@@ -29,8 +31,7 @@ export default function LoginPage() {
 
       toast.success("Login successful");
 
-      if (from) navigate(from, { replace: true });
-      else navigate("/", { replace: true });
+      history.replace(from);
     } catch (err) {
       toast.error("Login failed. Email or password is incorrect.");
     }

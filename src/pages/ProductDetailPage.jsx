@@ -2,13 +2,15 @@
 
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
+
+import { useHistory } from "../routerCompat";
 
 import { fetchProductById } from "../store/product.thunks";
 
 export default function ProductDetailPage() {
   const dispatch = useDispatch();
-  const navigate = useNavigate(); // ✅ v6
+  const history = useHistory();
   const { productId } = useParams();
 
   const product = useSelector((state) => state.product.product);
@@ -34,7 +36,7 @@ export default function ProductDetailPage() {
     <div className="max-w-6xl mx-auto px-4 py-8">
       {/* Back button */}
       <button
-        onClick={() => navigate(-1)} // ✅ useHistory yerine
+        onClick={() => history.goBack()}
         className="mb-6 text-sm text-blue-600 hover:underline"
       >
         ← Geri
