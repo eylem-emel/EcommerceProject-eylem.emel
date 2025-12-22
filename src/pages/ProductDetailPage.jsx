@@ -1,101 +1,63 @@
+// src/pages/ProductDetailPage.jsx
+
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Link, useParams, useHistory } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 
-import { fetchProductByIdThunk } from "../store/product.thunks";
-import { addToCart } from "../store/shoppingCart.actions";
+import { fetchProductById } from "../store/product.thunks";
 
 export default function ProductDetailPage() {
   const dispatch = useDispatch();
-  const history = useHistory();
-
+  const navigate = useNavigate(); // ✅ v6
   const { productId } = useParams();
 
-  // ✅ senin reducer yapın:
-  const product = useSelector((state) => state.product?.selectedProduct);
-  const fetchState = useSelector((state) => state.product?.selectedFetchState);
+  const product = useSelector((state) => state.product.product);
+  const fetchState = useSelector((state) => state.product.fetchState);
 
   useEffect(() => {
-    if (productId) dispatch(fetchProductByIdThunk(Number(productId)));
+    if (productId) {
+      dispatch(fetchProductById(productId));
+    }
   }, [dispatch, productId]);
-
-  const handleAddToCart = () => {
-    if (!product) return;
-    dispatch(addToCart(product));
-  };
 
   if (fetchState === "FETCHING") {
     return (
-      <div className="max-w-7xl mx-auto px-4 py-10">
-        <div className="animate-pulse text-gray-500">Yükleniyor...</div>
+      <div className="flex justify-center items-center h-64">
+        <span className="text-gray-500">Yükleniyor...</span>
       </div>
     );
   }
 
-  if (!product) {
-    return (
-      <div className="max-w-7xl mx-auto px-4 py-10">
-        <div className="text-gray-600">Ürün bulunamadı.</div>
-        <Link to="/shop" className="text-orange-600 underline">
-          Shop&apos;a dön
-        </Link>
-      </div>
-    );
-  }
-
-  const imgUrl =
-    product.images?.[0]?.url ||
-    "https://via.placeholder.com/600x600?text=No+Image";
+  if (!product) return null;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
+    <div className="max-w-6xl mx-auto px-4 py-8">
+      {/* Back button */}
       <button
-        onClick={() => history.goBack()}
-        className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border hover:bg-gray-50"
+        onClick={() => navigate(-1)} // ✅ useHistory yerine
+        className="mb-6 text-sm text-blue-600 hover:underline"
       >
         ← Geri
       </button>
 
-      <div className="mt-6 grid md:grid-cols-2 gap-8">
-        <div className="border rounded-2xl bg-white p-4">
-          <img
-            src={imgUrl}
-            alt={product.name}
-            className="w-full h-[420px] object-cover rounded-xl"
-          />
-        </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <img
+          src={product.images?.[0]?.url}
+          alt={product.name}
+          className="w-full rounded"
+        />
 
-        <div className="bg-white border rounded-2xl p-6">
-          <div className="text-2xl font-bold">{product.name}</div>
+        <div>
+          <h1 className="text-2xl font-semibold mb-2">{product.name}</h1>
+          <p className="text-gray-600 mb-4">{product.description}</p>
 
-          <div className="mt-2 text-gray-600">{product.description}</div>
-
-          <div className="mt-4 flex items-center justify-between">
-            <div className="text-2xl font-semibold">
-              {Number(product.price).toFixed(2)} ₺
-            </div>
-            <div className="text-sm text-gray-500">Stok: {product.stock}</div>
+          <div className="text-xl font-bold mb-4">
+            {product.price} TL
           </div>
 
-          <div className="mt-2 text-sm text-gray-500">
-            Rating: {product.rating}
-          </div>
-
-          <div className="mt-6 flex gap-3">
-            <button
-              onClick={handleAddToCart}
-              className="flex-1 px-5 py-3 rounded-xl bg-orange-500 text-white hover:bg-orange-600"
-            >
-              Sepete Ekle
-            </button>
-
-            <Link
-              to="/cart"
-              className="flex-1 text-center px-5 py-3 rounded-xl border hover:bg-gray-50"
-            >
-              Sepete Git
-            </Link>
-          </div>
+          <button className="px-6 py-2 bg-black text-white rounded hover:bg-gray-800">
+            Sepete Ekle
+          </button>
         </div>
       </div>
     </div>

@@ -2,41 +2,51 @@
 
 import {
   SET_USER,
+  CLEAR_USER,
   SET_ROLES,
   SET_THEME,
   SET_LANGUAGE,
-  SET_ADDRESS_LIST,
-  SET_CREDIT_CARDS,
-} from "./client.types";
+} from "./client.actions";
 
 const initialState = {
-  user: null,          // {Object}
-  addressList: [],     // {Object Array}
-  creditCards: [],     // {Object Array}
-  roles: [],           // {Object Array}
-  theme: "light",      // {String}
-  language: "tr",      // {String}
+  user: null,
+  addressList: [],
+  creditCards: [],
+  roles: [],
+  theme: "light",
+  language: "tr",
 };
 
 export default function clientReducer(state = initialState, action) {
   switch (action.type) {
     case SET_USER:
-      return { ...state, user: action.payload };
+      return {
+        ...state,
+        user: action.payload,
+      };
+
+    case CLEAR_USER:
+      return {
+        ...initialState,
+      };
 
     case SET_ROLES:
-      return { ...state, roles: action.payload };
+      return {
+        ...state,
+        roles: action.payload,
+      };
 
     case SET_THEME:
-      return { ...state, theme: action.payload };
+      return {
+        ...state,
+        theme: action.payload,
+      };
 
     case SET_LANGUAGE:
-      return { ...state, language: action.payload };
-
-    case SET_ADDRESS_LIST:
-      return { ...state, addressList: action.payload };
-
-    case SET_CREDIT_CARDS:
-      return { ...state, creditCards: action.payload };
+      return {
+        ...state,
+        language: action.payload,
+      };
 
     default:
       return state;

@@ -3,6 +3,7 @@
 import api from "../api/axios";
 import { setAddressList, setCreditCards } from "./client.actions";
 import { clearCart } from "./shoppingCart.actions";
+import { setOrders, setOrderFetchState, setOrderError } from "./order.actions";
 
 const asArray = (x) => (Array.isArray(x) ? x : []);
 
@@ -12,7 +13,6 @@ const asArray = (x) => (Array.isArray(x) ? x : []);
 
 export const fetchAddressesThunk = () => async (dispatch) => {
   const res = await api.get("/user/address");
-  // Backend bazen direkt array döndürüyor, bazen objenin içinde döndürebiliyor
   const list = asArray(res?.data) || asArray(res?.data?.addresses);
   dispatch(setAddressList(list));
   return list;
@@ -24,7 +24,6 @@ export const addAddressThunk = (payload) => async (dispatch) => {
 };
 
 export const updateAddressThunk = (payload) => async (dispatch) => {
-  // payload: { id, title, name, surname, phone, city, district, neighborhood }
   await api.put("/user/address", payload);
   return dispatch(fetchAddressesThunk());
 };
@@ -34,7 +33,6 @@ export const deleteAddressThunk = (addressId) => async (dispatch) => {
   return dispatch(fetchAddressesThunk());
 };
 
-// ✅ CreateOrderPage.jsx’te kullandığım isimlerle uyum için ALIAS export’lar:
 export const fetchAddressListThunk = fetchAddressesThunk;
 
 // ======================================================
@@ -49,13 +47,11 @@ export const fetchCardsThunk = () => async (dispatch) => {
 };
 
 export const addCardThunk = (payload) => async (dispatch) => {
-  // payload: { card_no, expire_month, expire_year, name_on_card }
   await api.post("/user/card", payload);
   return dispatch(fetchCardsThunk());
 };
 
 export const updateCardThunk = (payload) => async (dispatch) => {
-  // payload: { id, card_no, expire_month, expire_year, name_on_card }
   await api.put("/user/card", payload);
   return dispatch(fetchCardsThunk());
 };
@@ -65,7 +61,6 @@ export const deleteCardThunk = (cardId) => async (dispatch) => {
   return dispatch(fetchCardsThunk());
 };
 
-// ✅ CreateOrderPage.jsx’te kullandığım isimlerle uyum için ALIAS export’lar:
 export const fetchCardListThunk = fetchCardsThunk;
 
 // ======================================================
@@ -74,7 +69,7 @@ export const fetchCardListThunk = fetchCardsThunk;
 
 export const createOrderThunk = (payload) => async (dispatch) => {
   const res = await api.post("/order", payload);
-  dispatch(clearCart()); // sipariş sonrası sepeti sıfırla
+  dispatch(clearCart());
   return res?.data;
 };
 
@@ -82,7 +77,20 @@ export const createOrderThunk = (payload) => async (dispatch) => {
 // T23 - PREVIOUS ORDERS
 // ======================================================
 
-export const fetchOrdersThunk = () => async () => {
-  const res = await api.get("/order");
-  return res?.data;
+export const fetchOrdersThunk = () => async (dispatch) => {
+  try {
+    dispatch(setOrderFetchState("FETCHING"));
+    const res = await api.get("/order");
+    const list = asArray(res?.data) || asArray(res?.data?.orders);
+    dispatch(setOrders(list));
+    dispatch(setOrderFetchState("FETCHED"));
+    return list;
+  } catch (err) {
+    dispatch(setOrderFetchState("FAILED"));
+    dispatch(setOrderError(err?.response?.data?.message || err.message));
+    throw err;
+  }
 };
+
+// ✅ sayfanın beklediği isim
+export const fetchOrders = fetchOrdersThunk;
