@@ -17,6 +17,9 @@ import AboutPage from "./pages/AboutPage";
 import SignupPage from "./pages/SignupPage";
 import LoginPage from "./pages/LoginPage";
 import CartPage from "./pages/CartPage";
+import CreateOrderPage from "./pages/CreateOrderPage";
+import PreviousOrdersPage from "./pages/PreviousOrdersPage";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 import { verifyTokenThunk } from "./store/client.thunks";
 
@@ -37,7 +40,10 @@ export default function App() {
           <Route path="/" element={<HomePage />} />
 
           <Route path="/shop" element={<ShopPage />} />
-          <Route path="/shop/:gender/:categoryName/:categoryId" element={<ShopPage />} />
+          <Route
+            path="/shop/:gender/:categoryName/:categoryId"
+            element={<ShopPage />}
+          />
 
           <Route
             path="/shop/:gender/:categoryName/:categoryId/:productNameSlug/:productId"
@@ -51,7 +57,26 @@ export default function App() {
           <Route path="/about" element={<AboutPage />} />
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/login" element={<LoginPage />} />
+
           <Route path="/cart" element={<CartPage />} />
+
+          <Route
+            path="/order"
+            element={
+              <ProtectedRoute>
+                <CreateOrderPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/orders"
+            element={
+              <ProtectedRoute>
+                <PreviousOrdersPage />
+              </ProtectedRoute>
+            }
+          />
         </Routes>
       </PageContent>
 

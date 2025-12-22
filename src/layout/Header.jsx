@@ -2,16 +2,22 @@ import { Link, NavLink } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { fetchCategoriesIfNeeded } from "../store/product.thunks";
+import { logoutThunk } from "../store/client.thunks";
 
 export default function Header() {
   const dispatch = useDispatch();
 
   const cart = useSelector((state) => state.shoppingCart?.cart || []);
   const categories = useSelector((state) => state.product?.categories || []);
+  const user = useSelector((state) => state.client?.user);
 
   // Sepet dropdown
   const [openCart, setOpenCart] = useState(false);
   const cartDropdownRef = useRef(null);
+
+  // Kullanıcı dropdown
+  const [openUser, setOpenUser] = useState(false);
+  const userDropdownRef = useRef(null);
 
   // Shop dropdown (CLICK ile aç/kapat)
   const [openShop, setOpenShop] = useState(false);
@@ -43,6 +49,17 @@ export default function Header() {
     if (openShop) document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [openShop]);
+
+  // Dropdown dışına tıklayınca kapat (User)
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (!userDropdownRef.current) return;
+      if (!userDropdownRef.current.contains(e.target)) setOpenUser(false);
+    };
+
+    if (openUser) document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [openUser]);
 
   const { totalCount, totalPrice } = useMemo(() => {
     const totalCountCalc = cart.reduce((sum, item) => sum + (item.count || 0), 0);
@@ -77,7 +94,6 @@ export default function Header() {
 
   // --- T12 helpers (kategori linkleri) ---
   const parseCategory = (c) => {
-    // API örnek: code: "k:tisort", gender: "k", title: "Tişört"
     const code = String(c?.code || "");
     const [gFromCode, nameFromCode] = code.includes(":") ? code.split(":") : ["", ""];
     const gender = c?.gender || gFromCode; // "k" | "e"
@@ -98,7 +114,6 @@ export default function Header() {
     const kadin = parsed.filter((x) => x.gender === "k");
     const erkek = parsed.filter((x) => x.gender === "e");
 
-    // title'a göre sırala
     kadin.sort((a, b) => String(a.title).localeCompare(String(b.title), "tr"));
     erkek.sort((a, b) => String(a.title).localeCompare(String(b.title), "tr"));
 
@@ -124,7 +139,7 @@ export default function Header() {
             Home
           </NavLink>
 
-          {/* T12: SHOP DROPDOWN (CLICK) */}
+          {/* SHOP DROPDOWN (CLICK) */}
           <div className="relative" ref={shopDropdownRef}>
             <button
               type="button"
@@ -194,9 +209,52 @@ export default function Header() {
 
         {/* SAĞ TARAF */}
         <div className="flex items-center gap-6 relative" ref={cartDropdownRef}>
-          <NavLink to="/login" className="flex items-center gap-2">
-            <span>Hesabım</span>
-          </NavLink>
+          {/* USER */}
+          <div className="relative" ref={userDropdownRef}>
+            {user ? (
+              <button
+                type="button"
+                onClick={() => setOpenUser((v) => !v)}
+                className="flex items-center gap-2"
+              >
+                <span className="font-medium">{user.name || user.email}</span>
+                <span className="text-xs">▾</span>
+              </button>
+            ) : (
+              <NavLink to="/login" className="flex items-center gap-2">
+                <span>Hesabım</span>
+              </NavLink>
+            )}
+
+            {user && openUser && (
+              <div className="absolute right-0 top-10 w-56 bg-white border shadow-xl rounded-xl p-2 z-50">
+                <Link
+                  to="/orders"
+                  onClick={() => setOpenUser(false)}
+                  className="block px-3 py-2 rounded-lg hover:bg-gray-50 text-sm"
+                >
+                  Siparişlerim
+                </Link>
+                <Link
+                  to="/cart"
+                  onClick={() => setOpenUser(false)}
+                  className="block px-3 py-2 rounded-lg hover:bg-gray-50 text-sm"
+                >
+                  Sepetim
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => {
+                    dispatch(logoutThunk());
+                    setOpenUser(false);
+                  }}
+                  className="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-50 text-sm"
+                >
+                  Çıkış Yap
+                </button>
+              </div>
+            )}
+          </div>
 
           <NavLink to="/favorites" className="flex items-center gap-2">
             <span>Favorilerim</span>
@@ -280,12 +338,13 @@ export default function Header() {
                       Sepete Git
                     </Link>
 
-                    <button
-                      type="button"
-                      className="bg-orange-500 text-white rounded-lg py-2 font-medium"
+                    <Link
+                      to="/order"
+                      className="text-center bg-orange-500 text-white rounded-lg py-2 font-medium"
+                      onClick={() => setOpenCart(false)}
                     >
                       Siparişi Tamamla
-                    </button>
+                    </Link>
                   </div>
                 </div>
               )}

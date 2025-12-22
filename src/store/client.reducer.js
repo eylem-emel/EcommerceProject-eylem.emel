@@ -1,4 +1,12 @@
-import { SET_USER, CLEAR_USER, SET_ROLES, SET_THEME, SET_LANGUAGE } from "./client.types";
+import {
+  SET_USER,
+  CLEAR_USER,
+  SET_ROLES,
+  SET_THEME,
+  SET_LANGUAGE,
+  SET_ADDRESS_LIST,
+  SET_CREDIT_CARDS,
+} from "./client.types";
 
 const initialState = {
   user: null,
@@ -21,6 +29,10 @@ export default function clientReducer(state = initialState, action) {
       return { ...state, theme: action.payload };
     case SET_LANGUAGE:
       return { ...state, language: action.payload };
+    case SET_ADDRESS_LIST:
+      return { ...state, addressList: Array.isArray(action.payload) ? action.payload : [] };
+    case SET_CREDIT_CARDS:
+      return { ...state, creditCards: Array.isArray(action.payload) ? action.payload : [] };
     default:
       return state;
   }
