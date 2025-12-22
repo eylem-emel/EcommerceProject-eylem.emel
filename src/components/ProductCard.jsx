@@ -21,9 +21,13 @@ export default function ProductCard({ product }) {
 
   const genderRaw = (product.gender ?? "").toString().toLowerCase();
   const gender =
-    genderRaw === "k" || genderRaw.includes("kadin") || genderRaw.includes("women")
+    genderRaw === "k" ||
+    genderRaw.includes("kadin") ||
+    genderRaw.includes("women")
       ? "kadin"
-      : genderRaw === "e" || genderRaw.includes("erkek") || genderRaw.includes("men")
+      : genderRaw === "e" ||
+        genderRaw.includes("erkek") ||
+        genderRaw.includes("men")
       ? "erkek"
       : "kadin";
 
