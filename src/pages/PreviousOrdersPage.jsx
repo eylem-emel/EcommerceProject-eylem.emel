@@ -2,21 +2,13 @@
 
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Navigate } from "react-router-dom";
 
 import { fetchOrders } from "../store/order.thunks";
 
 export default function PreviousOrdersPage() {
   const dispatch = useDispatch();
-
-  const user = useSelector((state) => state.client.user);
   const orders = useSelector((state) => state.order.orders);
   const fetchState = useSelector((state) => state.order.fetchState);
-
-  // Login değilse → login
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
 
   useEffect(() => {
     dispatch(fetchOrders());

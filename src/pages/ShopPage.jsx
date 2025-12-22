@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useParams, useSearchParams } from "react-router-dom";
+import { useLocation, useParams } from "react-router-dom";
 
 import ProductCard from "../components/ProductCard";
 import { fetchProducts } from "../store/product.thunks";
@@ -9,7 +9,7 @@ import { setFilter, setLimit, setOffset, setSort } from "../store/product.action
 export default function ShopPage() {
   const dispatch = useDispatch();
   const { gender, categoryName, categoryId } = useParams();
-  const [searchParams] = useSearchParams();
+  const location = useLocation();
 
   const { productList, fetchState, total, limit, offset, filter, sort } = useSelector(
     (state) => state.product
@@ -19,8 +19,9 @@ export default function ShopPage() {
 
   // Header search bar’dan gelen ?search= varsa başlangıç filter’ına bas
   const initialSearch = useMemo(() => {
-    return (searchParams.get("search") || "").trim();
-  }, [searchParams]);
+    const params = new URLSearchParams(location.search || "");
+    return (params.get("search") || "").trim();
+  }, [location.search]);
 
   // İlk load: eğer search paramı varsa reducer filter’ına yaz
   useEffect(() => {
@@ -54,6 +55,7 @@ export default function ShopPage() {
   // Category değişince sayfa başına dön
   useEffect(() => {
     dispatch(setOffset(0));
+    dispatch(setFilter(""));
   }, [dispatch, categoryId]);
 
   // Pagination hesapları (T15)

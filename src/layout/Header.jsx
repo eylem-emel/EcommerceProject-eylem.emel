@@ -65,11 +65,11 @@ export default function Header() {
 
   // Header dropdown categories (Kadın/Erkek)
   const womenCategories = useMemo(
-    () => categories.filter((c) => c.gender === "k"),
+    () => categories.filter((c) => String(c.gender).toLowerCase() === "k"),
     [categories]
   );
   const menCategories = useMemo(
-    () => categories.filter((c) => c.gender === "e"),
+    () => categories.filter((c) => String(c.gender).toLowerCase() === "e"),
     [categories]
   );
 
@@ -168,6 +168,9 @@ export default function Header() {
                 <div>
                   <div className="font-semibold mb-2">Kadın</div>
                   <div className="space-y-1">
+                    {womenCategories.length === 0 && (
+                      <div className="text-xs text-gray-500 px-2 py-1">Kategori bulunamadı</div>
+                    )}
                     {womenCategories.map((c) => (
                       <Link
                         key={c.id}
@@ -183,6 +186,9 @@ export default function Header() {
                 <div>
                   <div className="font-semibold mb-2">Erkek</div>
                   <div className="space-y-1">
+                    {menCategories.length === 0 && (
+                      <div className="text-xs text-gray-500 px-2 py-1">Kategori bulunamadı</div>
+                    )}
                     {menCategories.map((c) => (
                       <Link
                         key={c.id}
@@ -219,9 +225,20 @@ export default function Header() {
                 <span className="text-xs">▾</span>
               </button>
             ) : (
-              <NavLink to="/login" className="flex items-center gap-2">
-                <span>Hesabım</span>
-              </NavLink>
+              <div className="flex items-center gap-2">
+                <NavLink
+                  to="/login"
+                  className="px-3 py-1 rounded-lg border hover:bg-gray-50 text-sm"
+                >
+                  Giriş Yap
+                </NavLink>
+                <NavLink
+                  to="/signup"
+                  className="px-3 py-1 rounded-lg bg-orange-500 text-white text-sm hover:bg-orange-600"
+                >
+                  Üye Ol
+                </NavLink>
+              </div>
             )}
 
             {user && openUser && (

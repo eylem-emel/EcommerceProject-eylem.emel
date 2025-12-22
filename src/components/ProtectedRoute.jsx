@@ -1,14 +1,25 @@
-import { Navigate, useLocation } from "react-router-dom";
 import { useSelector } from "react-redux";
+import { Route, Redirect } from "../routerCompat";
 
-// React Router v6 için basit Protected Route
-export default function ProtectedRoute({ children }) {
+// React Router v5 benzeri Protected Route
+export default function ProtectedRoute({ component: Component, ...rest }) {
   const user = useSelector((s) => s.client?.user);
-  const location = useLocation();
 
-  if (!user) {
-    return <Navigate to="/login" replace state={{ from: location }} />;
-  }
-
-  return children;
+  return (
+    <Route
+      {...rest}
+      render={(props) =>
+        user ? (
+          <Component {...props} />
+        ) : (
+          <Redirect
+            to={{
+              pathname: "/login",
+              state: { from: props.location },
+            }}
+          />
+        )
+      }
+    />
+  );
 }

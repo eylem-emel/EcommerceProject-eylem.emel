@@ -1,8 +1,10 @@
 import { useEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useForm } from "react-hook-form";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
+
+import { useHistory } from "../routerCompat";
 
 import api from "../api/axios";
 import { fetchRolesIfNeeded } from "../store/client.thunks";
@@ -20,8 +22,8 @@ const ibanRegex = /^TR\d{24}$/;
 
 export default function SignupPage() {
   const dispatch = useDispatch();
-  const navigate = useNavigate();
   const location = useLocation();
+  const history = useHistory();
 
   const roles = useSelector((s) => s.client.roles);
   const safeRoles = Array.isArray(roles) ? roles : [];
@@ -109,9 +111,9 @@ export default function SignupPage() {
       toast.warn("You need to click link in email to activate your account!");
 
       // Task: previous page. Eğer state yoksa bir önceki history.
-      const from = location.state?.from;
-      if (from) navigate(from, { replace: true });
-      else navigate(-1);
+      const from = location.state?.from?.pathname;
+      if (from) history.replace(from);
+      else history.goBack();
     } catch (err) {
       console.error("Signup error:", err);
       const msg =

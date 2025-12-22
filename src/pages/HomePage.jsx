@@ -1,7 +1,10 @@
 import { useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchCategoriesIfNeeded } from "../store/product.thunks";
+
+import HeroSlider from "../components/HeroSlider";
+import ProductCard from "../components/ProductCard";
+import { fetchCategoriesIfNeeded, fetchProducts } from "../store/product.thunks";
 
 function slugifyTr(text = "") {
   return String(text)
@@ -31,13 +34,17 @@ function safeImg(url = "") {
 export default function HomePage() {
   const dispatch = useDispatch();
   const categoriesRaw = useSelector((s) => s.product.categories);
+  const productList = useSelector((s) => s.product.productList);
+  const productFetchState = useSelector((s) => s.product.fetchState);
 
   useEffect(() => {
     dispatch(fetchCategoriesIfNeeded());
+    dispatch(fetchProducts({ limit: 8, offset: 0 }));
   }, [dispatch]);
 
   // her koşulda array garanti
   const categories = Array.isArray(categoriesRaw) ? categoriesRaw : [];
+  const products = Array.isArray(productList) ? productList : [];
 
   const top5 = useMemo(() => {
     const arr = [...categories];
@@ -48,27 +55,13 @@ export default function HomePage() {
   const linkOf = (cat) =>
     `/shop/${genderSlugFromApi(cat.gender)}/${slugifyTr(cat.title)}/${cat.id}`;
 
+  const featured = useMemo(() => products.slice(0, 8), [products]);
+
   return (
     <div className="w-full">
-      {/* HERO */}
-      <section className="w-full bg-sky-500 text-white rounded-2xl overflow-hidden">
-        <div className="container mx-auto px-6 py-16">
-          <div className="text-sm tracking-widest opacity-90">SUMMER 2025</div>
-          <h1 className="text-4xl sm:text-5xl font-extrabold mt-3">
-            NEW COLLECTION
-          </h1>
-          <p className="mt-4 max-w-xl text-white/90">
-            En popüler kategorileri keşfet. Rating’e göre ilk 5 kategori aşağıda.
-          </p>
-          <div className="mt-6">
-            <Link
-              to="/shop"
-              className="inline-flex items-center justify-center px-5 py-3 rounded-xl bg-white text-slate-900 font-semibold"
-            >
-              Shop Now
-            </Link>
-          </div>
-        </div>
+      {/* HERO SLIDER */}
+      <section className="mb-8">
+        <HeroSlider />
       </section>
 
       {/* TOP CATEGORIES */}
@@ -130,6 +123,31 @@ export default function HomePage() {
             )}
           </div>
         </div>
+      </section>
+
+      {/* FEATURED PRODUCTS */}
+      <section className="container mx-auto px-6 mt-8 mb-10">
+        <div className="flex items-baseline justify-between mb-4">
+          <div>
+            <div className="text-sm font-semibold">Featured Products</div>
+            <div className="text-sm text-zinc-600">Öne çıkan ürünler</div>
+          </div>
+          <Link to="/shop" className="text-sm underline">
+            View all
+          </Link>
+        </div>
+
+        {productFetchState === "FETCHING" || productFetchState === "NOT_FETCHED" ? (
+          <div className="text-sm text-zinc-500">Ürünler yükleniyor...</div>
+        ) : !featured.length ? (
+          <div className="text-sm text-zinc-500">Ürün bulunamadı.</div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+            {featured.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+        )}
       </section>
     </div>
   );
