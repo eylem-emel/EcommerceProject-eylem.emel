@@ -1,4 +1,6 @@
+import { useDispatch } from "react-redux";
 import { useHistory } from "../routerCompat";
+import { addToCart } from "../store/shoppingCart.actions";
 
 const slugify = (text) =>
   String(text || "")
@@ -13,6 +15,7 @@ const slugify = (text) =>
     .replace(/^-+|-+$/g, "");
 
 export default function ProductCard({ product }) {
+  const dispatch = useDispatch();
   const history = useHistory();
 
   const genderRaw = (product.gender ?? "").toString().toLowerCase();
@@ -37,13 +40,18 @@ export default function ProductCard({ product }) {
     );
   };
 
+  const handleAddToCart = (e) => {
+    e.stopPropagation();
+    dispatch(addToCart(product));
+  };
+
   return (
     <div
       onClick={handleClick}
       role="button"
       tabIndex={0}
       onKeyDown={(e) => e.key === "Enter" && handleClick()}
-      className="cursor-pointer border rounded-lg p-3 hover:shadow-lg hover:-translate-y-0.5 transition"
+      className="cursor-pointer border rounded-lg p-3 hover:shadow-lg hover:-translate-y-0.5 transition bg-white"
       title="Detaya git"
     >
       <img
@@ -53,6 +61,14 @@ export default function ProductCard({ product }) {
       />
       <h3 className="mt-2 font-semibold text-sm line-clamp-2">{product.name}</h3>
       <p className="text-sm text-gray-600 mt-1">{product.price} ₺</p>
+
+      <button
+        type="button"
+        onClick={handleAddToCart}
+        className="mt-3 w-full bg-black text-white rounded-lg py-2 text-sm hover:bg-gray-800"
+      >
+        Sepete Ekle
+      </button>
     </div>
   );
 }

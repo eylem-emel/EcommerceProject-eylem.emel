@@ -55,6 +55,7 @@ export default function ShopPage() {
   // Category değişince sayfa başına dön
   useEffect(() => {
     dispatch(setOffset(0));
+    dispatch(setFilter(""));
   }, [dispatch, categoryId]);
 
   // Pagination hesapları (T15)

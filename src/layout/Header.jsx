@@ -219,9 +219,20 @@ export default function Header() {
                 <span className="text-xs">▾</span>
               </button>
             ) : (
-              <NavLink to="/login" className="flex items-center gap-2">
-                <span>Hesabım</span>
-              </NavLink>
+              <div className="flex items-center gap-2">
+                <NavLink
+                  to="/login"
+                  className="px-3 py-1 rounded-lg border hover:bg-gray-50 text-sm"
+                >
+                  Giriş Yap
+                </NavLink>
+                <NavLink
+                  to="/signup"
+                  className="px-3 py-1 rounded-lg bg-orange-500 text-white text-sm hover:bg-orange-600"
+                >
+                  Üye Ol
+                </NavLink>
+              </div>
             )}
 
             {user && openUser && (
