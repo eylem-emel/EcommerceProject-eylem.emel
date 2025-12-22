@@ -57,6 +57,7 @@ export const fetchProducts = (params = {}) => async (dispatch, getState) => {
 // ✅ T16: /products/:productId
 export const fetchProductById = (productId) => async (dispatch) => {
   try {
+    dispatch(setSelectedProduct(null));
     dispatch(setSelectedProductFetchState("FETCHING"));
 
     const res = await api.get(`/products/${productId}`);

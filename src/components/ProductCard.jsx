@@ -1,4 +1,6 @@
-import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { useHistory } from "../routerCompat";
+import { addToCart } from "../store/shoppingCart.actions";
 
 const slugify = (text) =>
   String(text || "")
@@ -13,7 +15,8 @@ const slugify = (text) =>
     .replace(/^-+|-+$/g, "");
 
 export default function ProductCard({ product }) {
-  const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const history = useHistory();
 
   const genderRaw = (product.gender ?? "").toString().toLowerCase();
   const gender =
@@ -32,9 +35,14 @@ export default function ProductCard({ product }) {
   const productNameSlug = slugify(product.name);
 
   const handleClick = () => {
-    navigate(
+    history.push(
       `/shop/${gender}/${slugify(categoryName)}/${categoryId}/${productNameSlug}/${product.id}`
     );
+  };
+
+  const handleAddToCart = (e) => {
+    e.stopPropagation();
+    dispatch(addToCart(product));
   };
 
   return (
@@ -43,7 +51,7 @@ export default function ProductCard({ product }) {
       role="button"
       tabIndex={0}
       onKeyDown={(e) => e.key === "Enter" && handleClick()}
-      className="cursor-pointer border rounded-lg p-3 hover:shadow-lg hover:-translate-y-0.5 transition"
+      className="cursor-pointer border rounded-lg p-3 hover:shadow-lg hover:-translate-y-0.5 transition bg-white"
       title="Detaya git"
     >
       <img
@@ -53,6 +61,14 @@ export default function ProductCard({ product }) {
       />
       <h3 className="mt-2 font-semibold text-sm line-clamp-2">{product.name}</h3>
       <p className="text-sm text-gray-600 mt-1">{product.price} ₺</p>
+
+      <button
+        type="button"
+        onClick={handleAddToCart}
+        className="mt-3 w-full bg-black text-white rounded-lg py-2 text-sm hover:bg-gray-800"
+      >
+        Sepete Ekle
+      </button>
     </div>
   );
 }
