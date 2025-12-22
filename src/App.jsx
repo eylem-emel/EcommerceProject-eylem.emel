@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { ToastContainer } from "react-toastify";
@@ -26,7 +26,6 @@ import { verifyTokenThunk } from "./store/client.thunks";
 export default function App() {
   const dispatch = useDispatch();
 
-  // T11: Auto-login on app start (only if token exists)
   useEffect(() => {
     dispatch(verifyTokenThunk());
   }, [dispatch]);
@@ -39,29 +38,33 @@ export default function App() {
         <Routes>
           <Route path="/" element={<HomePage />} />
 
+          {/* SHOP */}
           <Route path="/shop" element={<ShopPage />} />
           <Route
             path="/shop/:gender/:categoryName/:categoryId"
             element={<ShopPage />}
           />
-
           <Route
             path="/shop/:gender/:categoryName/:categoryId/:productNameSlug/:productId"
             element={<ProductDetailPage />}
           />
 
+          {/* (opsiyonel) eski detail route */}
           <Route path="/product/:productId" element={<ProductDetailPage />} />
 
+          {/* STATIC */}
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/team" element={<TeamPage />} />
           <Route path="/about" element={<AboutPage />} />
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/login" element={<LoginPage />} />
 
+          {/* CART */}
           <Route path="/cart" element={<CartPage />} />
 
+          {/* CHECKOUT */}
           <Route
-            path="/order"
+            path="/create-order"
             element={
               <ProtectedRoute>
                 <CreateOrderPage />
@@ -69,6 +72,10 @@ export default function App() {
             }
           />
 
+          {/* eski /order path kırılmasın -> /create-order'a gönder */}
+          <Route path="/order" element={<Navigate to="/create-order" replace />} />
+
+          {/* ORDERS */}
           <Route
             path="/orders"
             element={
@@ -77,11 +84,13 @@ export default function App() {
               </ProtectedRoute>
             }
           />
+
+          {/* 404 */}
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </PageContent>
 
       <Footer />
-
       <ToastContainer position="top-right" autoClose={3000} />
     </div>
   );

@@ -68,3 +68,9 @@ export const fetchProductById = (productId) => async (dispatch) => {
     dispatch(setSelectedProductFetchState("FAILED"));
   }
 };
+
+// ----------------------------------------------------
+// ✅ ALIAS’lar (bazı dosyalarda "...Thunk" isimleriyle çağrılıyor olabilir)
+// ----------------------------------------------------
+export const fetchProductByIdThunk = fetchProductById;
+export const fetchProductsThunk = fetchProducts;
