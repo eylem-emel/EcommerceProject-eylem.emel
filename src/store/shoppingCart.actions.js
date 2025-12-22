@@ -1,32 +1,18 @@
-import {
-  ADD_TO_CART,
-  DECREASE_CART_ITEM,
-  REMOVE_FROM_CART,
-  TOGGLE_CART_ITEM,
-  CLEAR_CART,
-} from "./shoppingCart.types";
+// src/store/shoppingCart.actions.js
 
-export const addToCart = (product) => ({
-  type: ADD_TO_CART,
-  payload: product,
+import { SET_CART, SET_PAYMENT, SET_ADDRESS } from "./shoppingCart.types";
+
+export const setCart = (cart) => ({
+  type: SET_CART,
+  payload: cart,
 });
 
-// Sepet sayfasında adet azaltma (1'e inerse ürünü kaldırır)
-export const decreaseCartItem = (productId) => ({
-  type: DECREASE_CART_ITEM,
-  payload: productId,
+export const setPayment = (payment) => ({
+  type: SET_PAYMENT,
+  payload: payment,
 });
 
-export const removeFromCart = (productId) => ({
-  type: REMOVE_FROM_CART,
-  payload: productId,
-});
-
-export const toggleCartItem = (productId) => ({
-  type: TOGGLE_CART_ITEM,
-  payload: productId,
-});
-
-export const clearCart = () => ({
-  type: CLEAR_CART,
+export const setAddress = (address) => ({
+  type: SET_ADDRESS,
+  payload: address,
 });

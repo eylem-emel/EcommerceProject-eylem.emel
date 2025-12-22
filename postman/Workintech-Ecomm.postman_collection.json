@@ -1,0 +1,197 @@
+{
+  "info": {
+    "name": "Workintech E-Commerce API",
+    "_postman_id": "ecomm-demo-collection",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth - Roles",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/roles",
+          "host": ["{{baseUrl}}"],
+          "path": ["roles"]
+        }
+      }
+    },
+    {
+      "name": "Auth - Signup (Customer)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Test User\",\n  \"email\": \"testuser@example.com\",\n  \"password\": \"Abc12345!\",\n  \"role_id\": 1\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/signup",
+          "host": ["{{baseUrl}}"],
+          "path": ["signup"]
+        }
+      }
+    },
+    {
+      "name": "Auth - Signup (Store)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Test Store User\",\n  \"email\": \"teststoreuser@example.com\",\n  \"password\": \"Abc12345!\",\n  \"role_id\": 2,\n  \"store\": {\n    \"name\": \"Test Store\",\n    \"phone\": \"05376845834\",\n    \"tax_no\": \"T1234V123456\",\n    \"bank_account\": \"TR330006100519786457841326\"\n  }\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/signup",
+          "host": ["{{baseUrl}}"],
+          "path": ["signup"]
+        }
+      }
+    },
+    {
+      "name": "Auth - Login",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"customer@commerce.com\",\n  \"password\": \"123456\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/login",
+          "host": ["{{baseUrl}}"],
+          "path": ["login"]
+        }
+      }
+    },
+    {
+      "name": "Auth - Verify",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "{{token}}" }],
+        "url": {
+          "raw": "{{baseUrl}}/verify",
+          "host": ["{{baseUrl}}"],
+          "path": ["verify"]
+        }
+      }
+    },
+    {
+      "name": "Categories",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/categories",
+          "host": ["{{baseUrl}}"],
+          "path": ["categories"]
+        }
+      }
+    },
+    {
+      "name": "Products (query)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/products?limit=25&offset=0&category=2&filter=siyah&sort=price:desc",
+          "host": ["{{baseUrl}}"],
+          "path": ["products"],
+          "query": [
+            { "key": "limit", "value": "25" },
+            { "key": "offset", "value": "0" },
+            { "key": "category", "value": "2" },
+            { "key": "filter", "value": "siyah" },
+            { "key": "sort", "value": "price:desc" }
+          ]
+        }
+      }
+    },
+    {
+      "name": "User - Address (list)",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "{{token}}" }],
+        "url": {
+          "raw": "{{baseUrl}}/user/address",
+          "host": ["{{baseUrl}}"],
+          "path": ["user", "address"]
+        }
+      }
+    },
+    {
+      "name": "User - Address (create)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "{{token}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"ev adresi\",\n  \"name\": \"Alişan\",\n  \"surname\": \"Karababa\",\n  \"phone\": \"05376845834\",\n  \"city\": \"istanbul\",\n  \"district\": \"esenler\",\n  \"neighborhood\": \"adres detayları\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/user/address",
+          "host": ["{{baseUrl}}"],
+          "path": ["user", "address"]
+        }
+      }
+    },
+    {
+      "name": "User - Card (list)",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "{{token}}" }],
+        "url": {
+          "raw": "{{baseUrl}}/user/card",
+          "host": ["{{baseUrl}}"],
+          "path": ["user", "card"]
+        }
+      }
+    },
+    {
+      "name": "User - Card (create)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "{{token}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"card_no\": \"1234123412341234\",\n  \"expire_month\": 12,\n  \"expire_year\": 2025,\n  \"name_on_card\": \"Ali Baş\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/user/card",
+          "host": ["{{baseUrl}}"],
+          "path": ["user", "card"]
+        }
+      }
+    },
+    {
+      "name": "Order - Create",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "{{token}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"address_id\": 1,\n  \"order_date\": \"2024-01-10T14:18:30\",\n  \"card_no\": 1234123412341234,\n  \"card_name\": \"Ali Baş\",\n  \"card_expire_month\": 12,\n  \"card_expire_year\": 2025,\n  \"card_ccv\": 321,\n  \"price\": 1919,\n  \"products\": [\n    {\n      \"product_id\": 12,\n      \"count\": 1,\n      \"detail\": \"açık mavi - xl\"\n    }\n  ]\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/order",
+          "host": ["{{baseUrl}}"],
+          "path": ["order"]
+        }
+      }
+    }
+  ],
+  "variable": [
+    { "key": "baseUrl", "value": "https://workintech-fe-ecommerce.onrender.com" },
+    { "key": "token", "value": "" }
+  ]
+}
