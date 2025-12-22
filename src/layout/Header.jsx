@@ -65,11 +65,11 @@ export default function Header() {
 
   // Header dropdown categories (Kadın/Erkek)
   const womenCategories = useMemo(
-    () => categories.filter((c) => c.gender === "k"),
+    () => categories.filter((c) => String(c.gender).toLowerCase() === "k"),
     [categories]
   );
   const menCategories = useMemo(
-    () => categories.filter((c) => c.gender === "e"),
+    () => categories.filter((c) => String(c.gender).toLowerCase() === "e"),
     [categories]
   );
 
@@ -168,6 +168,9 @@ export default function Header() {
                 <div>
                   <div className="font-semibold mb-2">Kadın</div>
                   <div className="space-y-1">
+                    {womenCategories.length === 0 && (
+                      <div className="text-xs text-gray-500 px-2 py-1">Kategori bulunamadı</div>
+                    )}
                     {womenCategories.map((c) => (
                       <Link
                         key={c.id}
@@ -183,6 +186,9 @@ export default function Header() {
                 <div>
                   <div className="font-semibold mb-2">Erkek</div>
                   <div className="space-y-1">
+                    {menCategories.length === 0 && (
+                      <div className="text-xs text-gray-500 px-2 py-1">Kategori bulunamadı</div>
+                    )}
                     {menCategories.map((c) => (
                       <Link
                         key={c.id}

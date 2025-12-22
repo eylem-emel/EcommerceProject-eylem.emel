@@ -1,4 +1,5 @@
 import { useDispatch } from "react-redux";
+import { toast } from "react-toastify";
 import { useHistory } from "../routerCompat";
 import { addToCart } from "../store/shoppingCart.actions";
 
@@ -20,9 +21,13 @@ export default function ProductCard({ product }) {
 
   const genderRaw = (product.gender ?? "").toString().toLowerCase();
   const gender =
-    genderRaw === "k" || genderRaw.includes("kadin") || genderRaw.includes("women")
+    genderRaw === "k" ||
+    genderRaw.includes("kadin") ||
+    genderRaw.includes("women")
       ? "kadin"
-      : genderRaw === "e" || genderRaw.includes("erkek") || genderRaw.includes("men")
+      : genderRaw === "e" ||
+        genderRaw.includes("erkek") ||
+        genderRaw.includes("men")
       ? "erkek"
       : "kadin";
 
@@ -43,6 +48,7 @@ export default function ProductCard({ product }) {
   const handleAddToCart = (e) => {
     e.stopPropagation();
     dispatch(addToCart(product));
+    toast.success("Ürün sepete eklendi");
   };
 
   return (
